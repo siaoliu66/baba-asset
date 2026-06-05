@@ -55,8 +55,13 @@
         <a href="{{ url_for('assets.create') }}" class="btn btn-primary px-4">
             <i class="fas fa-plus me-1"></i>新增資產
         </a>
-        <a href="{{ url_for('assets.export') }}?category={{ request.args.get('category') }}&status={{ request.args.get('status') }}"  class="btn btn btn-secondary px-4">
-            匯出 Excel
+        <a href="{{ url_for('assets.export') }}?q={{ request.args.get('q') }}&category={{ request.args.get('category') }}&location={{ request.args.get('location') }}&status={{ request.args.get('status') }}"
+            class="btn btn-light px-3 border">
+            <i class="fas fa-download"></i>匯出資產 Excel
+        </a>
+        <a href="{{ url_for('assets.export_qrcodes') }}?q={{ request.args.get('q') }}&category={{ request.args.get('category') }}&location={{ request.args.get('location') }}&status={{ request.args.get('status') }}"
+            class="btn btn-info px-3 border">
+            <i class="fas fa-qrcode me-1"></i>匯出 QRCode JPG
         </a>
         <button class="btn btn-success px-3 border" data-bs-toggle="modal" data-bs-target="#importModal"><i class="fas fa-file-import me-1"></i>匯入資產</button>
     </div>

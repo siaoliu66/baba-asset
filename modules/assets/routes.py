@@ -11,8 +11,10 @@ from core.workflow_service import WorkflowService
 from core.qr_service import QRHelper
 from extensions import db
 from io import BytesIO
-
+import qrcode
+import zipfile
 import pandas as pd
+
 assets_bp = Blueprint('assets', __name__)
 
 ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'webp', 'gif'}
@@ -329,11 +331,11 @@ def import_assets():
 
     return redirect(url_for('assets.index'))
 
+# 匯出資產 Excel
 @assets_bp.route('/export', methods=['GET'], endpoint='export')
 @login_required
 def export_assets():
 
-    # 狀態對應表
     status_map = {
         'active': '使用中',
         'in_stock': '在庫',
@@ -342,26 +344,26 @@ def export_assets():
         'lost': '遺失'
     }
 
-    # 套用篩選條件（跟列表頁一致）
-    query = Asset.query
-    
+    # 讀取清單頁的 query string
+    q = request.args.get('q')
     category = request.args.get('category')
+    location = request.args.get('location')
     status = request.args.get('status')
-    company = request.args.get('company')
-    department = request.args.get('department')
 
+    query = Asset.query
+
+    if q:
+        query = query.filter(Asset.name.like(f"%{q}%"))
     if category:
-        query = query.join(AssetCategory).filter(AssetCategory.name == category)
+        query = query.filter(Asset.category_id == category)
+    if location:
+        query = query.filter(Asset.location_id == location)
     if status:
         query = query.filter(Asset.status == status)
-    if company:
-        query = query.join(Company).filter(Company.name == company)
-    if department:
-        query = query.join(Department).filter(Department.name == department)
 
     assets = query.all()
 
-    # 組成 DataFrame（匯入欄位一致，去掉購買金額/耐用年限/殘值/折舊方法）
+    # 組成 DataFrame
     data = []
     for a in assets:
         data.append({
@@ -375,14 +377,13 @@ def export_assets():
             '歸屬部門': a.department.name if a.department else '',
             '保管人': a.custodian.name if a.custodian else '',
             '存放地點': a.location.name if a.location else '',
-            '狀態': a.status,
+            '狀態': status_map.get(a.status, a.status),
             '購買日期': a.purchase_date.strftime('%Y-%m-%d') if a.purchase_date else '',
             '備註': a.notes
         })
 
     df = pd.DataFrame(data)
 
-    # 輸出 Excel
     output = BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         df.to_excel(writer, index=False, sheet_name='Assets')
@@ -694,3 +695,50 @@ def batch_disposal():
         flash(f'批次報廢失敗: {str(e)}', 'danger')
 
     return redirect(url_for('assets.disposal_list'))
+
+
+# 匯出 QR Code JPG (ZIP)
+@assets_bp.route('/export_qrcodes', methods=['GET'], endpoint='export_qrcodes')
+@login_required
+def export_qrcodes():
+    import qrcode
+    import zipfile
+    from io import BytesIO
+    from flask import send_file, request
+
+    # 讀取清單頁的 query string
+    q = request.args.get('q')
+    category = request.args.get('category')
+    location = request.args.get('location')
+    status = request.args.get('status')
+
+    query = Asset.query
+
+    if q:
+        query = query.filter(Asset.name.like(f"%{q}%"))
+    if category:
+        query = query.filter(Asset.category_id == category)
+    if location:
+        query = query.filter(Asset.location_id == location)
+    if status:
+        query = query.filter(Asset.status == status)
+
+    assets = query.all()
+
+    # 建立 ZIP 檔
+    zip_buffer = BytesIO()
+    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for a in assets:
+            qr_img = qrcode.make(a.id)
+            img_bytes = BytesIO()
+            qr_img.save(img_bytes, format='JPEG')
+            img_bytes.seek(0)
+
+            filename = f"{a.id}_{a.name}.jpg"
+            zipf.writestr(filename, img_bytes.read())
+
+    zip_buffer.seek(0)
+    return send_file(zip_buffer,
+                     as_attachment=True,
+                     download_name="qrcodes.zip",
+                     mimetype="application/zip")

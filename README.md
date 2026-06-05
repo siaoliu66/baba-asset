@@ -13,3 +13,21 @@ ngrok 使用
 4.就會有網址 Forwarding的那個
 
 只要.exe關閉 連結就會失效 下次開啟就直接從3開始做
+
+
+
+---------------------------------------------------------
+清空測試資料 - asset
+打開 CMD 或 PowerShell，進到專案根目錄：
+
+cd 資產管理系統2026
+python
+from core import db
+from core.models import Asset
+
+# 清空 assets 表
+db.session.query(Asset).delete()
+db.session.commit()
+
+print(db.session.query(Asset).count())
+如果顯示 0，代表已經清空。
