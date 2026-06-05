@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}{{ '編輯' if location else '新增' }}地點{% endblock %}
+{% block header %}{{ '編輯' if location else '新增' }}地點{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card glass-card border-0 shadow-sm p-4">
+            <form
+                action="{{ url_for('settings.location_edit', id=location.id) if location else url_for('settings.location_create') }}"
+                method="POST">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">地點名稱 <span class="text-danger">*</span></label>
+                        <input type="text" name="name" class="form-control"
+                            value="{{ location.name if location else '' }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">地點代碼 <span class="text-danger">*</span></label>
+                        <input type="text" name="code" class="form-control"
+                            value="{{ location.code if location else '' }}" required maxlength="20"
+                            placeholder="例如: LOC001">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">所屬公司 <span class="text-danger">*</span></label>
+                        <select name="company_id" class="form-select" required>
+                            <option value="">-- 請選擇 --</option>
+                            {% for c in companies %}
+                            <option value="{{ c.id }}" {% if location and location.company_id==c.id %}selected{% endif
+                                %}>{{ c.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">上級地點</label>
+                        <select name="parent_id" class="form-select">
+                            <option value="">-- 頂層地點 --</option>
+                            {% for loc in locations %}
+                            {% if not location or loc.id != location.id %}
+                            <option value="{{ loc.id }}" {% if location and location.parent_id==loc.id %}selected{%
+                                endif %}>{{ loc.name }}</option>
+                            {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-bold">完整地址</label>
+                        <input type="text" name="address" class="form-control"
+                            value="{{ location.address if location else '' }}">
+                    </div>
+                    <div class="col-12 mt-4">
+                        <hr class="opacity-10 mb-4">
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('settings.location_list') }}" class="btn btn-light border px-4"><i
+                                    class="fas fa-arrow-left me-2"></i>返回列表</a>
+                            <button type="submit" class="btn btn-primary px-5"><i
+                                    class="fas fa-save me-2"></i>儲存</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

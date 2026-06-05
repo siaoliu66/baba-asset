@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}財務儀表板{% endblock %}
+{% block header %}財務儀表板{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Key Metrics -->
+    <div class="col-md-3">
+        <div class="card glass-card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <h6 class="text-muted fw-bold small text-uppercase mb-3">總資產價值 (Cost)</h6>
+                <h3 class="fw-bold text-primary mb-0">${{ "{:,.0f}".format(total_cost) }}</h3>
+                <small class="text-muted">共 {{ total_assets }} 筆資產</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card glass-card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <h6 class="text-muted fw-bold small text-uppercase mb-3">累計折舊 (Accumulated)</h6>
+                <h3 class="fw-bold text-danger mb-0">${{ "{:,.0f}".format(total_depreciated) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card glass-card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <h6 class="text-muted fw-bold small text-uppercase mb-3">帳面價值 (Net Book Value)</h6>
+                <h3 class="fw-bold text-success mb-0">${{ "{:,.0f}".format(net_book_value) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card glass-card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <h6 class="text-muted fw-bold small text-uppercase mb-3">快速操作</h6>
+                <button class="btn btn-primary w-100 mb-2" data-bs-toggle="modal" data-bs-target="#calcModal">
+                    <i class="fas fa-calculator me-2"></i>試算本月折舊
+                </button>
+                <a href="{{ url_for('finance.asset_list') }}" class="btn btn-outline-secondary w-100">
+                    <i class="fas fa-list me-2"></i>查看固定資產清冊
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="col-12">
+        <div class="card glass-card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center py-3">
+                <h5 class="fw-bold mb-0 text-primary">最近折舊紀錄</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4">日期</th>
+                                <th>資產名稱</th>
+                                <th>期間</th>
+                                <th>折舊金額</th>
+                                <th>累積折舊</th>
+                                <th>帳面價值</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in recent_records %}
+                            <tr>
+                                <td class="ps-4 text-muted small">{{ record.created_at.strftime('%Y-%m-%d') }}</td>
+                                <td class="fw-bold">{{ record.asset.name }}</td>
+                                <td><span class="badge bg-light text-dark border">{{ record.fiscal_year }}-{{
+                                        "{:02d}".format(record.month) }}</span></td>
+                                <td class="text-danger">-${{ "{:,.2f}".format(record.depreciation_amount) }}</td>
+                                <td class="text-muted">${{ "{:,.2f}".format(record.accumulated_depreciation) }}</td>
+                                <td class="fw-bold text-success">${{ "{:,.2f}".format(record.book_value) }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    <i class="fas fa-file-invoice-dollar fa-3x mb-3 opacity-50"></i>
+                                    <p>尚無折舊紀錄</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Calculation Modal -->
+<div class="modal fade" id="calcModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass border-0 shadow">
+            <form action="{{ url_for('finance.calculate_depreciation') }}" method="POST">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold">手動折舊試算</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small">請選擇要試算的年份與月份。系統將針對所有「使用中」且尚未折舊的資產進行直線折舊計算。</p>
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label class="form-label fw-bold">年份</label>
+                            <input type="number" name="year" class="form-control" value="{{ now.year }}">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-bold">月份</label>
+                            <input type="number" name="month" class="form-control" value="{{ now.month }}" min="1"
+                                max="12">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">開始計算</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

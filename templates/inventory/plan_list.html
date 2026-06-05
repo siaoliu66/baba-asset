@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}盤點計畫{% endblock %}
+{% block header %}資產盤點管理{% endblock %}
+
+{% block content %}
+<div class="card glass-card border-0 shadow-sm p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h5 class="fw-bold mb-0">盤點個案列表</h5>
+        <a href="{{ url_for('inventory.create_plan') }}" class="btn btn-primary px-4">
+            <i class="fas fa-calendar-plus me-2"></i>發起盤點
+        </a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle table-mobile-responsive">
+            <thead class="table-light">
+                <tr>
+                    <th>計畫名稱</th>
+                    <th>類型</th>
+                    <th>進度</th>
+                    <th>起訖日期</th>
+                    <th>目前狀態</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for plan in plans %}
+                <tr class="mobile-card-row">
+                    <td data-label="計畫名稱"><span class="fw-bold">{{ plan.name }}</span></td>
+                    <td data-label="類型">
+                        <span class="badge bg-light text-dark px-2">
+                            {{ '區域盤點' if plan.plan_type == 'location' else '全盤' if plan.plan_type == 'full' else '個人盤點'
+                            }}
+                        </span>
+                    </td>
+                    <td data-label="進度">
+                        <div class="d-flex align-items-center">
+                            <div class="progress flex-grow-1 me-2" style="height: 6px; max-width: 120px;">
+                                <div class="progress-bar bg-primary" style="width: 0%"></div>
+                            </div>
+                            <small class="text-muted" style="font-size: 0.7rem;">0 / 0</small>
+                        </div>
+                    </td>
+                    <td data-label="起訖日期">
+                        <small>{{ plan.start_date.strftime('%Y-%m-%d') }} ~ {{ plan.end_date.strftime('%Y-%m-%d')
+                            }}</small>
+                    </td>
+                    <td data-label="目前狀態">
+                        {% if plan.status == 'draft' %}
+                        <span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-3">草稿</span>
+                        {% elif plan.status == 'active' %}
+                        <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3">進行中</span>
+                        {% elif plan.status == 'pending_review' %}
+                        <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill px-3">簽核中</span>
+                        {% elif plan.status == 'pending_dept' %}
+                        <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill px-3">部門核准中</span>
+                        {% elif plan.status == 'pending_senior' %}
+                        <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill px-3">高階核准中</span>
+                        {% elif plan.status == 'completed' %}
+                        <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3">已結案</span>
+                        {% elif plan.status == 'rejected' %}
+                        <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-3">已駁回</span>
+                        {% else %}
+                        <span class="badge bg-info bg-opacity-10 text-info rounded-pill px-3">{{ plan.status }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-md-start">
+                        <div class="btn-group w-100 w-md-auto">
+                            <a href="{{ url_for('inventory.view_plan', plan_id=plan.id) }}"
+                                class="btn btn-sm btn-light border" title="詳情">
+                                <i class="fas fa-list-ul me-1"></i>詳情
+                            </a>
+                            {% if plan.status == 'draft' %}
+                            <form action="{{ url_for('inventory.start_plan', plan_id=plan.id) }}" method="POST"
+                                class="flex-grow-1">
+                                <button type="submit" class="btn btn-sm btn-primary w-100 ms-md-1" title="啟動盤點">
+                                    <i class="fas fa-play me-1"></i>開始
+                                </button>
+                            </form>
+                            <form action="{{ url_for('inventory.delete_plan', plan_id=plan.id) }}" method="POST"
+                                onsubmit="return confirm('確定要刪除此盤點計畫嗎？此動作無法復原。');" class="flex-grow-1">
+                                <button type="submit" class="btn btn-sm btn-danger w-100 ms-md-1" title="刪除計畫">
+                                    <i class="fas fa-trash-alt me-1"></i>刪除
+                                </button>
+                            </form>
+                            {% elif current_user.role and current_user.role.name in ['super_admin', 'admin'] %}
+                            <form action="{{ url_for('inventory.delete_plan', plan_id=plan.id) }}" method="POST"
+                                onsubmit="return confirm('管理員操作：確定要強制刪除此盤點計畫嗎？(包含已結案或進行中資料)');" class="flex-grow-1">
+                                <button type="submit" class="btn btn-sm btn-outline-danger w-100 ms-md-1" title="強制刪除">
+                                    <i class="fas fa-trash-alt me-1"></i>強制刪除
+                                </button>
+                            </form>
+                            {% endif %}
+
+                            {% if plan.status == 'active' and current_user.role.name in ['super_admin', 'admin']  %}
+                            <form action="{{ url_for('inventory.close_plan', plan_id=plan.id) }}" method="POST"
+                                onsubmit="return confirm('盤點已完成？即將送出進行部門與高階主管簽核。');" class="flex-grow-1">
+                                <button type="submit" class="btn btn-sm btn-outline-primary w-100 ms-md-1" title="送出簽核">
+                                    <i class="fas fa-paper-plane me-1"></i>送出簽核
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center py-5 text-muted">
+                        <i class="fas fa-clipboard-list fa-3x mb-3 opacity-25"></i>
+                        <p>尚未發起任何盤點計畫</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

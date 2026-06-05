@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}{{ '編輯' if company else '新增' }}公司{% endblock %}
+{% block header %}{{ '編輯' if company else '新增' }}公司{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card glass-card border-0 shadow-sm p-4">
+            <form
+                action="{{ url_for('settings.company_edit', id=company.id) if company else url_for('settings.company_create') }}"
+                method="POST">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">公司名稱 <span class="text-danger">*</span></label>
+                        <input type="text" name="name" class="form-control"
+                            value="{{ company.name if company else '' }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">公司代碼 <span class="text-danger">*</span></label>
+                        <input type="text" name="code" class="form-control"
+                            value="{{ company.code if company else '' }}" required maxlength="20"
+                            placeholder="例如: HQ001">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">顯示名稱</label>
+                        <input type="text" name="display_name" class="form-control"
+                            value="{{ company.display_name if company else '' }}">
+                        <small class="text-muted">若不填則使用公司名稱</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">統一編號</label>
+                        <input type="text" name="tax_id" class="form-control"
+                            value="{{ company.tax_id if company else '' }}" maxlength="8">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">電話</label>
+                        <input type="text" name="phone" class="form-control"
+                            value="{{ company.phone if company else '' }}">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-bold">地址</label>
+                        <input type="text" name="address" class="form-control"
+                            value="{{ company.address if company else '' }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">排序</label>
+                        <input type="number" name="sort_order" class="form-control"
+                            value="{{ company.sort_order if company else 0 }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">&nbsp;</label>
+                        <div class="form-check mt-2">
+                            <input type="checkbox" name="is_active" class="form-check-input" id="isActive" {{ 'checked'
+                                if (company and company.is_active) or not company else '' }}>
+                            <label class="form-check-label" for="isActive">啟用</label>
+                        </div>
+                    </div>
+                    <div class="col-12 mt-4">
+                        <hr class="opacity-10 mb-4">
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('settings.company_list') }}" class="btn btn-light border px-4"><i
+                                    class="fas fa-arrow-left me-2"></i>返回列表</a>
+                            <button type="submit" class="btn btn-primary px-5"><i
+                                    class="fas fa-save me-2"></i>儲存</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

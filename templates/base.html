@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#667eea">
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <link rel="apple-touch-icon" href="/static/img/icon-192.png">
+    <title>{{ config['APP_NAME'] }} - {% block title %}{% endblock %}</title>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v={{ range(1, 10000) | random }}">
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    {% if current_user.is_authenticated %}
+    <!-- Sidebar (Desktop Only) -->
+    <div class="sidebar">
+        <div class="brand">
+            <i class="fas fa-box-open me-2"></i>資產管理系統
+        </div>
+        <ul class="sidebar-nav">
+            <li class="nav-item">
+                <a href="{{ url_for('dashboard.index') }}"
+                    class="nav-link {{ 'active' if request.endpoint == 'dashboard.index' }}">
+                    <i class="fas fa-chart-line"></i>儀表板
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ url_for('assets.index') }}"
+                    class="nav-link {{ 'active' if 'assets.' in request.endpoint }}">
+                    <i class="fas fa-tags"></i>資產管理
+                </a>
+                <!-- <a href="{{ url_for('assets.transfer_list') }}"
+                    class="nav-link ps-5 {{ 'active' if request.endpoint == 'assets.transfer_list' }}_sub"
+                    style="font-size: 0.85rem; opacity: 0.8; {{ 'display: block;' if 'assets.' in request.endpoint else 'display: none;' }} padding-left: 2rem !important;">
+                    <i class="fas fa-exchange-alt small me-2"></i>移轉紀錄
+                </a>
+                <a href="{{ url_for('assets.disposal_list') }}"
+                    class="nav-link ps-5 {{ 'active' if request.endpoint == 'assets.disposal_list' }}_sub"
+                    style="font-size: 0.85rem; opacity: 0.8; {{ 'display: block;' if 'assets.' in request.endpoint else 'display: none;' }} padding-left: 2rem !important;">
+                    <i class="fas fa-trash-alt small me-2"></i>報廢紀錄
+                </a> -->
+            </li>
+            <li class="nav-item">
+                {% if current_user.role.name in ['super_admin', 'admin', 'senior_manager', 'manager', 'inventory_staff'] %}
+                <a href="{{ url_for('inventory.plan_list') }}"
+                    class="nav-link {{ 'active' if 'inventory.' in request.endpoint }}">
+                    <i class="fas fa-clipboard-check"></i>盤點管理
+                </a>
+                {% endif %}
+                <a href="{{ url_for('inventory.my_tasks') }}"
+                    class="nav-link ps-5 {{ 'active' if request.endpoint == 'inventory.my_tasks' }}"
+                    style="font-size: 0.85rem; opacity: 0.8; {{ 'display: block;' if 'inventory.' in request.endpoint else 'display: none;' }} padding-left: 2rem !important;">
+                    <i class="fas fa-tasks small me-2"></i>開始盤點
+                </a>
+            </li>
+            {% if config['DOCUMENT_MODULE_ENABLED'] %}
+            <!-- <li class="nav-item">
+                <a href="{{ url_for('documents.index') }}"
+                    class="nav-link {{ 'active' if 'documents.' in request.endpoint }}">
+                    <i class="fas fa-file-contract"></i>文件管理
+                </a>
+            </li> -->
+            {% endif %}
+            <!-- <li class="nav-item">
+                <a href="{{ url_for('finance.dashboard') }}"
+                    class="nav-link {{ 'active' if 'finance.' in request.endpoint }}">
+                    <i class="fas fa-coins"></i>財務管理
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ url_for('workflows.pending_requests') }}"
+                    class="nav-link {{ 'active' if 'workflows.' in request.endpoint }}">
+                    <i class="fas fa-file-signature"></i>簽核清單
+                </a>
+            </li>
+             -->
+            {% if current_user.role.name in ['super_admin', 'admin'] %}
+            <li class="nav-item">
+                <a href="{{ url_for('settings.index') }}"
+                    class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('settings.') }}">
+                    <i class="fas fa-cog"></i>系統設定
+                </a>
+            </li>
+            {% endif %}
+            <li class="nav-item">
+                <a href="{{ url_for('auth.logout') }}" class="nav-link text-danger">
+                    <i class="fas fa-sign-out-alt"></i>登出系統
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <header class="header">
+            <!-- Mobile Back Button (hidden on desktop and on dashboard) -->
+            {% if request.endpoint != 'dashboard.index' %}
+            <button class="btn btn-sm border-0 d-md-none mobile-back-btn" onclick="history.back()">
+                <i class="fas fa-chevron-left fa-lg"></i>
+            </button>
+            {% endif %}
+            <h2 class="fw-bold mb-0">{% block header %}{% endblock %}</h2>
+            <div class="user-info d-flex align-items-center">
+                <div class="notifications me-3 me-md-4 position-relative d-none d-md-block" style="cursor: pointer;">
+                    <i class="far fa-bell fa-lg text-muted"></i>
+                    <span id="notif-badge"
+                        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none"
+                        style="font-size: 0.6rem;">
+                        0
+                    </span>
+                </div>
+                <div class="me-3 text-end d-none d-md-block">
+                    <div class="fw-bold text-truncate" style="max-width: 120px;">{{ current_user.display_name or
+                        current_user.username }}</div>
+                    <small class="text-muted">{{ current_user.role.display_name if current_user.role else '使用者'
+                        }}</small>
+                </div>
+                <!-- User Profile Dropdown -->
+                <div class="dropdown">
+                    <div class="avatar glass p-1 rounded-circle" style="width: 40px; height: 40px; cursor: pointer;"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        <img src="https://ui-avatars.com/api/?name={{ current_user.username }}&amp;background=2563eb&amp;color=fff"
+                            class="rounded-circle img-fluid">
+                    </div>
+                    <ul class="dropdown-menu dropdown-menu-end mobile-user-menu border-0 shadow-lg">
+                        <li class="px-3 py-2 d-md-none border-bottom mb-2">
+                            <div class="fw-bold">{{ current_user.display_name or current_user.username }}</div>
+                            <small class="text-muted">{{ current_user.role.display_name if current_user.role else '使用者'
+                                }}</small>
+                        </li>
+                        <li><a class="dropdown-item" href="{{ url_for('auth.profile') }}"><i
+                                    class="far fa-user-circle me-2"></i>個人設定</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('settings.index') }}"><i
+                                    class="fas fa-cog me-2"></i>系統設定</a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}">
+                                <i class="fas fa-sign-out-alt me-2"></i>登出系統
+                            </a></li>
+                    </ul>
+                </div>
+            </div>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show glass-card mb-4 border-0" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <div class="fade-in">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+    {% else %}
+    {% block auth_content %}{% endblock %}
+    {% endif %}
+
+    <!-- QR Scanner Modal -->
+    {% if current_user.is_authenticated %}
+    <div class="modal fade" id="qrScannerModal" tabindex="-1" aria-labelledby="qrScannerModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-0 bg-primary text-white">
+                    <h6 class="modal-title fw-bold" id="qrScannerModalLabel"><i class="fas fa-qrcode me-2"></i>掃描 QR
+                        Code</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div id="qr-reader" style="width: 100%; min-height: 300px;"></div>
+                    <div id="qr-result" class="p-3 d-none">
+                        <div class="alert alert-success mb-0">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <span id="qr-result-text"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light w-100" data-bs-dismiss="modal">關閉</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Mobile Bottom Navigation -->
+    {% if current_user.is_authenticated %}
+    <nav class="bottom-nav">
+        <a href="{{ url_for('dashboard.index') }}"
+            class="bottom-nav-item {{ 'active' if request.endpoint == 'dashboard.index' }}">
+            <i class="fas fa-th-large"></i>
+            <span>概覽</span>
+        </a>
+        <a href="{{ url_for('assets.my_assets') }}"
+            class="bottom-nav-item {{ 'active' if 'assets.' in request.endpoint }}">
+            <i class="fas fa-box-open"></i>
+            <span>資產</span>
+        </a>
+        <div class="bottom-nav-item scan-btn-wrapper">
+            <a href="#" class="scan-btn" id="btn-open-scanner">
+                <i class="fas fa-camera"></i>
+            </a>
+        </div>
+        <a href="{{ url_for('inventory.my_tasks') }}"
+            class="bottom-nav-item {{ 'active' if 'inventory.' in request.endpoint }}">
+            <i class="fas fa-clipboard-check"></i>
+            <span>盤點</span>
+        </a>
+        <a href="{{ url_for('workflows.pending_requests') }}"
+            class="bottom-nav-item {{ 'active' if 'workflows.' in request.endpoint }}">
+            <i class="fas fa-file-signature"></i>
+            <span>簽核</span>
+        </a>
+    </nav>
+    {% endif %}
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+    <!-- QR Scanner Library -->
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script>
+        $(document).ready(function () {
+            // PWA Service Worker Registration
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/static/js/sw.js')
+                    .then(reg => console.log('SW Registered', reg))
+                    .catch(err => console.log('SW Failed', err));
+            }
+
+            {% if current_user.is_authenticated %}
+            const socket = io();
+            const userId = "{{ current_user.id }}";
+
+            socket.on('notification_user_' + userId, function (data) {
+                console.log('New notification:', data);
+                let badge = $('#notif-badge');
+                let count = parseInt(badge.text()) + 1;
+                badge.text(count).removeClass('d-none');
+                alert('新通知: ' + data.title + '\n' + data.content);
+            });
+
+            // ========== QR Scanner Logic ==========
+            let qrScanner = null;
+            const scannerModal = document.getElementById('qrScannerModal');
+
+            // Open scanner from bottom nav
+            $('#btn-open-scanner').on('click', function (e) {
+                e.preventDefault();
+                var modal = new bootstrap.Modal(scannerModal);
+                modal.show();
+            });
+
+            // Start scanner when modal opens
+            if (scannerModal) {
+                scannerModal.addEventListener('shown.bs.modal', function () {
+                    startQrScanner();
+                });
+                scannerModal.addEventListener('hidden.bs.modal', function () {
+                    stopQrScanner();
+                });
+            }
+
+            function startQrScanner() {
+                $('#qr-result').addClass('d-none');
+                if (qrScanner) return;
+                qrScanner = new Html5Qrcode("qr-reader");
+                qrScanner.start(
+                    { facingMode: "environment" },
+                    { fps: 10, qrbox: { width: 250, height: 250 } },
+                    function (decodedText) {
+                        // Success
+                        stopQrScanner();
+                        // Parse ASSETV2:xxx format
+                        let assetId = decodedText;
+                        if (decodedText.includes(':')) {
+                            assetId = decodedText.split(':').pop();
+                        }
+                        $('#qr-result-text').text('資產編號: ' + assetId + ' — 正在跳轉...');
+                        $('#qr-result').removeClass('d-none');
+                        // Navigate to asset detail after short delay
+                        setTimeout(function () {
+                            bootstrap.Modal.getInstance(scannerModal).hide();
+                            window.location.href = '/assets/' + assetId;
+                        }, 800);
+                    },
+                    function (errorMessage) {
+                        // Scan error - ignore, keep scanning
+                    }
+                ).catch(err => {
+                    console.error("Scanner error:", err);
+                    $('#qr-result-text').text('無法啟動相機，請確認權限設定。');
+                    $('#qr-result').removeClass('d-none').find('.alert').removeClass('alert-success').addClass('alert-danger');
+                });
+            }
+
+            function stopQrScanner() {
+                if (qrScanner) {
+                    qrScanner.stop().then(() => {
+                        qrScanner.clear();
+                        qrScanner = null;
+                    }).catch(err => console.error("Stop error:", err));
+                }
+            }
+            {% endif %}
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+    {% block modals %}{% endblock %}
+</body>
+
+</html>

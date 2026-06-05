@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}人員管理{% endblock %}
+{% block header %}人員管理{% endblock %}
+
+{% block content %}
+<div class="card glass-card border-0 shadow-sm p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h5 class="fw-bold mb-0"><i class="fas fa-users me-2 text-primary"></i>人員列表</h5>
+        <div>
+        <a href="{{ url_for('settings.personnel_create') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>新增人員
+        </a>
+        <a href="{{ url_for('settings.personnel_download_sample') }}" class="btn btn-outline-secondary me-2">
+            <i class="fas fa-file-download me-2"></i>下載範例
+        </a>
+        <form action="{{ url_for('settings.personnel_import') }}" method="POST" enctype="multipart/form-data" class="d-inline">
+            <label class="btn btn-outline-success mb-0">
+                <i class="fas fa-file-upload me-2"></i>匯入人員
+                <input type="file" name="file" hidden onchange="this.form.submit()">
+            </label>
+        </form>
+    </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>員工編號</th>
+                    <th>姓名</th>
+                    <th>部門</th>
+                    <th>職位</th>
+                    <th>Email</th>
+                    <th class="text-center">狀態</th>
+                    <th class="text-end">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in personnel %}
+                <tr>
+                    <td><code>{{ p.employee_id or '-' }}</code></td>
+                    <td class="fw-bold">{{ p.name }}</td>
+                    <td>{{ p.department.display_name if p.department else '-' }}</td>
+                    <td>{{ p.position or '-' }}</td>
+                    <td>{{ p.email or '-' }}</td>
+                    <td class="text-center">
+                        {% if p.is_active %}
+                        <span class="badge bg-success">在職</span>
+                        {% else %}
+                        <span class="badge bg-secondary">離職</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <a href="{{ url_for('settings.personnel_edit', id=p.id) }}"
+                            class="btn btn-sm btn-outline-primary me-1">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <form action="{{ url_for('settings.personnel_delete', id=p.id) }}" method="POST"
+                            class="d-inline" onsubmit="return confirm('確定要刪除此人員嗎？')">
+                            <button type="submit" class="btn btn-sm btn-outline-danger"><i
+                                    class="fas fa-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">尚無人員資料</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

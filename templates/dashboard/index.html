@@ -1,0 +1,302 @@
+{% extends "base.html" %}
+
+{% block title %}儀表板{% endblock %}
+{% block header %}系統儀表板{% endblock %}
+
+{% block content %}
+<!-- Mobile View -->
+<div class="col-12 d-block d-md-none mb-4">
+    <div class="px-2 mb-4">
+        <h5 class="fw-bold mb-1">早安，{{ current_user.display_name or current_user.username }}</h5>
+        <small class="text-muted">{{ current_user.role.display_name if current_user.role else '使用者' }}</small>
+    </div>
+    <div class="row g-3">
+        <div class="col-6">
+            <a href="{{ url_for('inventory.my_tasks') }}" class="card glass-card border-0 shadow-sm text-decoration-none h-100">
+                <div class="card-body text-center p-3 d-flex flex-column align-items-center justify-content-center" style="min-height: 120px;">
+                    <div class="icon-circle bg-primary bg-opacity-10 text-primary mb-2" style="width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-clipboard-check fa-lg"></i>
+                    </div>
+                    <span class="fw-bold text-dark">我的盤點</span>
+                    {% if stats.active_inventory_tasks > 0 %}
+                    <span class="badge bg-danger rounded-pill mt-2">{{ stats.active_inventory_tasks }} 待執行</span>
+                    {% else %}
+                    <span class="small text-muted mt-1">無任務</span>
+                    {% endif %}
+                </div>
+            </a>
+        </div>
+        <div class="col-6">
+            <a href="{{ url_for('workflows.pending_requests') }}" class="card glass-card border-0 shadow-sm text-decoration-none h-100">
+                <div class="card-body text-center p-3 d-flex flex-column align-items-center justify-content-center" style="min-height: 120px;">
+                    <div class="icon-circle bg-success bg-opacity-10 text-success mb-2" style="width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-file-signature fa-lg"></i>
+                    </div>
+                    <span class="fw-bold text-dark">待簽核</span>
+                    {% if stats.pending_approvals > 0 %}
+                    <span class="badge bg-danger rounded-pill mt-2">{{ stats.pending_approvals }} 筆</span>
+                    {% else %}
+                    <span class="small text-muted mt-1">無待辦</span>
+                    {% endif %}
+                </div>
+            </a>
+        </div>
+        <div class="col-6">
+            <a href="{{ url_for('assets.my_assets') }}" class="card glass-card border-0 shadow-sm text-decoration-none h-100">
+                <div class="card-body text-center p-3 d-flex flex-column align-items-center justify-content-center" style="min-height: 120px;">
+                    <div class="icon-circle bg-info bg-opacity-10 text-info mb-2" style="width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-box-open fa-lg"></i>
+                    </div>
+                    <span class="fw-bold text-dark">我的資產</span>
+                    <span class="small text-muted mt-1">查詢與報修</span>
+                </div>
+            </a>
+        </div>
+        <div class="col-6">
+            <a href="{{ url_for('auth.profile') }}" class="card glass-card border-0 shadow-sm text-decoration-none h-100">
+                <div class="card-body text-center p-3 d-flex flex-column align-items-center justify-content-center" style="min-height: 120px;">
+                    <div class="icon-circle bg-warning bg-opacity-10 text-warning mb-2" style="width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-cog fa-lg"></i>
+                    </div>
+                    <span class="fw-bold text-dark">個人設定</span>
+                    <span class="small text-muted mt-1">個人與偏好</span>
+                </div>
+            </a>
+        </div>
+    </div>
+    <div class="card glass-card border-0 shadow-sm mt-4">
+        <div class="card-header bg-transparent border-0 p-3">
+            <h6 class="fw-bold mb-0">資產概覽</h6>
+        </div>
+        <div class="card-body p-3">
+            <div class="d-flex justify-content-around text-center">
+                <div>
+                    <div class="h4 fw-bold text-primary mb-0">{{ stats.total_assets }}</div>
+                    <small class="text-muted">總資產</small>
+                </div>
+                <div>
+                    <div class="h4 fw-bold text-success mb-0">{{ stats.active_assets }}</div>
+                    <small class="text-muted">使用中</small>
+                </div>
+                <div>
+                    <div class="h4 fw-bold text-warning mb-0">{{ stats.maintenance_assets }}</div>
+                    <small class="text-muted">維修中</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Desktop View -->
+<div class="row g-4 d-none d-md-flex">
+    <div class="col-md-3">
+        <div class="card glass-card p-4 h-100 text-center border-0 shadow-sm">
+            <div class="icon-circle bg-primary bg-opacity-10 text-primary mx-auto mb-3" style="width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-boxes fa-lg"></i>
+            </div>
+            <h5 class="text-muted small fw-bold">總資產數量</h5>
+            <h2 class="fw-bold mb-0">{{ stats.total_assets }}</h2>
+            <div class="mt-2 small text-success"><i class="fas fa-check-circle"></i> {{ stats.active_assets }} 使用中</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card glass-card p-4 h-100 text-center border-0 shadow-sm">
+            <div class="icon-circle bg-warning bg-opacity-10 text-warning mx-auto mb-3" style="width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-tools fa-lg"></i>
+            </div>
+            <h5 class="text-muted small fw-bold">待維修資產</h5>
+            <h2 class="fw-bold mb-0">{{ stats.maintenance_assets }}</h2>
+            <div class="mt-2 small text-danger">需追蹤進度</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card glass-card p-4 h-100 text-center border-0 shadow-sm">
+            <div class="icon-circle bg-success bg-opacity-10 text-success mx-auto mb-3" style="width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-signature fa-lg"></i>
+            </div>
+            <h5 class="text-muted small fw-bold">待我簽核</h5>
+            <h2 class="fw-bold mb-0 text-primary">{{ stats.pending_approvals }}</h2>
+            <div class="mt-2 small text-muted">需要您的核可</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card glass-card p-4 h-100 text-center border-0 shadow-sm">
+            <div class="icon-circle bg-info bg-opacity-10 text-info mx-auto mb-3" style="width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-clipboard-list fa-lg"></i>
+            </div>
+            <h5 class="text-muted small fw-bold">執行中盤點計畫</h5>
+            <h2 class="fw-bold mb-0">{{ stats.active_inventory_tasks }}</h2>
+            <div class="mt-2 small text-info">作業進行中</div>
+        </div>
+    </div>
+    <div class="col-md-8 mt-4">
+        <div class="row g-4 h-100">
+            <div class="col-md-6">
+                <div class="card glass-card border-0 shadow-sm p-4 h-100">
+                    <h6 class="fw-bold mb-4"><i class="fas fa-chart-pie me-2 text-primary"></i>資產狀態分布</h6>
+                    <div class="position-relative" style="height: 250px;">
+                        <canvas id="assetStatusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card glass-card border-0 shadow-sm p-4 h-100">
+                    <h6 class="fw-bold mb-4"><i class="fas fa-building me-2 text-success"></i>部門資產分布</h6>
+                    {% if dept_stats %}
+                    <div class="position-relative" style="height: 250px;">
+                        <canvas id="deptDistChart"></canvas>
+                    </div>
+                    {% else %}
+                    <div class="d-flex align-items-center justify-content-center h-100 opacity-50" style="min-height: 200px;">
+                        <p class="small text-center"><i class="fas fa-chart-bar fa-3x mb-2"></i><br />尚無部門資產數據</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mt-4">
+        <div class="card glass-card border-0 shadow-sm p-4 h-100">
+            <h6 class="fw-bold mb-4">最近 7 日異動趨勢</h6>
+            <div class="d-flex align-items-center justify-content-center h-100 opacity-50">
+                <p class="small text-center"><i class="fas fa-chart-line fa-3x mb-2"></i><br />需要更多數據以生成趨勢圖</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 mt-4">
+        <div class="card glass-card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0 p-4 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0">近期資產異動</h5>
+                <button class="btn btn-sm btn-light px-3">查看全部</button>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>資產編號</th>
+                                <th>名稱</th>
+                                <th>保管人</th>
+                                <th>異動類型</th>
+                                <th>狀態</th>
+                                <th>日期</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log, asset in recent_activities %}
+                            <tr>
+                                <td class="fw-bold">{{ asset.id }}</td>
+                                <td>{{ asset.name }}</td>
+                                <td>{{ asset.custodian.name if asset.custodian else '-' }}</td>
+                                <td>
+                                    {% if log.action == 'UPDATE' %}
+                                    <span class="badge bg-soft-info text-info px-3">資料變更</span>
+                                    {% elif log.action == 'TRANSFER' %}
+                                    <span class="badge bg-soft-primary text-primary px-3">資產移轉</span>
+                                    {% elif log.action == 'DISPOSAL' %}
+                                    <span class="badge bg-soft-danger text-danger px-3">報廢處理</span>
+                                    {% else %}
+                                    <span class="badge bg-light text-dark px-3">{{ log.action }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if asset.status == 'active' %}
+                                    <span class="badge bg-success rounded-pill px-3">使用中</span>
+                                    {% elif asset.status == 'maintenance' %}
+                                    <span class="badge bg-warning rounded-pill px-3">維修中</span>
+                                    {% elif asset.status == 'disposed' %}
+                                    <span class="badge bg-secondary rounded-pill px-3">已報廢</span>
+                                    {% elif asset.status == 'lost' %}
+                                    <span class="badge bg-danger rounded-pill px-3">遺失</span>
+                                    {% else %}
+                                    <span class="badge bg-light text-dark rounded-pill px-3">{{ asset.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ log.created_at.strftime('%Y-%m-%d') }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted">尚無近期異動紀錄</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+    .bg-soft-primary { background-color: rgba(102, 126, 234, 0.1); }
+    .bg-soft-warning { background-color: rgba(246, 173, 85, 0.1); }
+    .bg-soft-info { background-color: rgba(99, 179, 237, 0.1); }
+    .bg-soft-danger { background-color: rgba(252, 129, 129, 0.1); }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var ctx = document.getElementById('assetStatusChart');
+    if (ctx) {
+        var activeAssets = parseInt('{{ stats.active_assets }}');
+        var maintenanceAssets = parseInt('{{ stats.maintenance_assets }}');
+        var totalAssets = parseInt('{{ stats.total_assets }}');
+        var idleAssets = totalAssets > 0 ? (totalAssets - activeAssets - maintenanceAssets) : 0;
+        new Chart(ctx.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: ['使用中', '維修中', '閒置/預備', '已報廢'],
+                datasets: [{
+                    data: [activeAssets, maintenanceAssets, idleAssets, 0],
+                    backgroundColor: ['#667eea', '#f6ad55', '#edf2f7', '#a0aec0'],
+                    borderWidth: 0,
+                    cutout: '70%'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+    }
+
+    var ctxDept = document.getElementById('deptDistChart');
+    if (ctxDept) {
+        var deptData = {{ dept_stats | tojson }};
+        var deptLabels = deptData.map(function(d) { return d.name; });
+        var deptCounts = deptData.map(function(d) { return d.count; });
+        var colors = ['#4299e1', '#48bb78', '#ed8936', '#ecc94b', '#9f7aea', '#f56565', '#38b2ac', '#667eea'];
+        new Chart(ctxDept.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: deptLabels,
+                datasets: [{
+                    data: deptCounts,
+                    backgroundColor: colors,
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '50%',
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            usePointStyle: true,
+                            pointStyle: 'circle',
+                            padding: 20
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

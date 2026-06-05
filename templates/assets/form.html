@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}新增資產{% endblock %}
+{% block header %}新增資產資材{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card glass-card border-0 shadow-sm p-4">
+            <form action="{{ url_for('assets.create') }}" method="POST" enctype="multipart/form-data">
+                <div class="row g-4">
+                    <!-- 基本資訊 -->
+                    <div class="col-12">
+                        <h6 class="fw-bold text-primary mb-3"><i class="fas fa-info-circle me-2"></i>基本資訊</h6>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">資產編號 <span class="text-danger">*</span></label>
+                        <input type="text" name="asset_id" class="form-control" placeholder="例如: A-2026-0001" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">資產名稱 <span class="text-danger">*</span></label>
+                        <input type="text" name="name" class="form-control" placeholder="例如: MacBook Pro M3" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">資產分類</label>
+                        <select name="category_id" class="form-select">
+                            <option value="">-- 請選擇分類 --</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}">{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- 規格資訊 -->
+                    <div class="col-12 mt-4">
+                        <h6 class="fw-bold text-primary mb-3"><i class="fas fa-microchip me-2"></i>規格資訊</h6>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">品牌</label>
+                        <input type="text" name="brand" class="form-control" placeholder="例如: Apple">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">型號</label>
+                        <input type="text" name="model" class="form-control" placeholder="例如: MacBook Pro 14吋">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">序號</label>
+                        <input type="text" name="serial_number" class="form-control" placeholder="例如: C02XL2VWJK77">
+                    </div>
+
+                    <!-- 財務資訊 
+                    <div class="col-12 mt-4">
+                        <h6 class="fw-bold text-primary mb-3"><i class="fas fa-coins me-2"></i>財務資訊</h6>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">取得日期</label>
+                        <input type="date" name="purchase_date" class="form-control" value="{{ now_date }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">取得成本 (NT$)</label>
+                        <input type="number" name="purchase_price" class="form-control" min="0" placeholder="0">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">耐用年限 (年)</label>
+                        <input type="number" name="useful_life_years" class="form-control" min="0" placeholder="例如: 3">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">預估殘值 (NT$)</label>
+                        <input type="number" name="salvage_value" class="form-control" min="0" placeholder="0">
+                    </div>-->
+
+                    <!-- 歸屬資訊 -->
+                    <div class="col-12 mt-4">
+                        <h6 class="fw-bold text-primary mb-3"><i class="fas fa-building me-2"></i>歸屬資訊</h6>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">所屬公司</label>
+                        <select name="company_id" class="form-select">
+                            <option value="">-- 請選擇 --</option>
+                            {% for comp in companies %}
+                            <option value="{{ comp.id }}">{{ comp.display_name or comp.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">歸屬部門</label>
+                        <select name="department_id" class="form-select">
+                            <option value="">-- 請選擇 --</option>
+                            {% for dept in departments %}
+                            <option value="{{ dept.id }}">{{ dept.display_name or dept.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">保管人</label>
+                        <select name="custodian_id" class="form-select">
+                            <option value="">-- 請選擇 --</option>
+                            {% for p in personnel %}
+                            <option value="{{ p.id }}">{{ p.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">存放地點</label>
+                        <select name="location_id" class="form-select">
+                            <option value="">-- 請選擇 --</option>
+                            {% for loc in locations %}
+                            <option value="{{ loc.id }}">{{ loc.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- 照片上傳 -->
+                    <div class="col-12 mt-4">
+                        <h6 class="fw-bold text-primary mb-3"><i class="fas fa-camera me-2"></i>資產照片</h6>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">上傳照片</label>
+                        <input type="file" name="photo" class="form-control" accept=".jpg,.jpeg,.png,.webp,.gif"
+                            id="photoInput">
+                        <small class="text-muted">支援格式：JPG, PNG, WebP, GIF (最大 5MB)</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">使用相機</label>
+                        <input type="file" name="camera_photo" class="form-control" accept="image/*"
+                            capture="environment" id="cameraInput">
+                        <small class="text-muted">手機可直接拍照上傳</small>
+                    </div>
+                    <div class="col-12">
+                        <div id="photoPreview" class="border rounded p-3 text-center d-none" style="min-height: 150px;">
+                            <img id="previewImg" src="" alt="預覽" style="max-height: 200px; max-width: 100%;">
+                        </div>
+                    </div>
+
+                    <!-- 備註 -->
+                    <div class="col-md-12 mt-4">
+                        <label class="form-label fw-bold">備註說明</label>
+                        <textarea name="notes" class="form-control" rows="3" placeholder="請輸入資產相關資訊..."></textarea>
+                    </div>
+
+                    <div class="col-12 mt-5">
+                        <hr class="opacity-10 mb-4">
+                        <div class="d-flex justify-content-end">
+                            <a href="{{ url_for('assets.index') }}" class="btn btn-light px-4 me-2 border">取消</a>
+                            <button type="submit" class="btn btn-primary px-5"><i
+                                    class="fas fa-save me-2"></i>儲存資產</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Photo preview functionality
+    function setupPhotoPreview(inputId) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+
+        input.addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    document.getElementById('previewImg').src = e.target.result;
+                    document.getElementById('photoPreview').classList.remove('d-none');
+
+                    // If using camera, copy to main photo input
+                    if (inputId === 'cameraInput') {
+                        // Create a DataTransfer to copy file
+                        const dt = new DataTransfer();
+                        dt.items.add(file);
+                        document.getElementById('photoInput').files = dt.files;
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    setupPhotoPreview('photoInput');
+    setupPhotoPreview('cameraInput');
+</script>
+{% endblock %}

@@ -1,0 +1,428 @@
+{% extends "base.html" %}
+
+{% block title %}資產列表{% endblock %}
+{% block header %}資產主檔管理{% endblock %}
+
+{% block content %}
+<div class="card glass-card border-0 shadow-sm p-4">
+    <form method="GET" action="{{ url_for('assets.index') }}" class="mb-4">
+        <div class="row g-2 align-items-end">
+            <div class="col-12 col-md-4">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                    <input type="text" name="q" class="form-control border-start-0" placeholder="搜尋資產編號、名稱、保管人..."
+                        value="{{ q or '' }}">
+                </div>
+            </div>
+            <div class="col-6 col-md-2">
+                <select name="category" class="form-select form-select-sm">
+                    <option value="">全部分類</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.id }}" {% if sel_category==cat.id %}selected{% endif %}>{{ cat.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <select name="location" class="form-select form-select-sm">
+                    <option value="">全部地點</option>
+                    {% for loc in locations %}
+                    <option value="{{ loc.id }}" {% if sel_location==loc.id %}selected{% endif %}>{{ loc.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <select name="status" class="form-select form-select-sm">
+                    <option value="">全部狀態</option>
+                    <option value="active" {% if sel_status=='active' %}selected{% endif %}>使用中</option>
+                    <option value="in_stock" {% if sel_status=='in_stock' %}selected{% endif %}>在庫</option>
+                    <option value="disposed" {% if sel_status=='disposed' %}selected{% endif %}>已報廢</option>
+                    <option value="lost" {% if sel_status=='lost' %}selected{% endif %}>遺失</option>
+                    <option value="maintenance" {% if sel_status=='maintenance' %}selected{% endif %}>維修中</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-sm flex-grow-1"><i
+                        class="fas fa-filter me-1"></i>篩選</button>
+                <a href="{{ url_for('assets.index') }}" class="btn btn-outline-secondary btn-sm"><i
+                        class="fas fa-undo"></i></a>
+            </div>
+        </div>
+    </form>
+    
+    <div class="d-flex justify-content-end mb-3 gap-2">
+        <a href="{{ url_for('assets.create') }}" class="btn btn-primary px-4">
+            <i class="fas fa-plus me-1"></i>新增資產
+        </a>
+        <a href="{{ url_for('assets.export') }}?category={{ request.args.get('category') }}&status={{ request.args.get('status') }}"  class="btn btn btn-secondary px-4">
+            匯出 Excel
+        </a>
+        <button class="btn btn-success px-3 border" data-bs-toggle="modal" data-bs-target="#importModal"><i class="fas fa-file-import me-1"></i>匯入資產</button>
+    </div>
+
+    <form id="importForm" action="{{ url_for('assets.import_assets') }}" method="POST" enctype="multipart/form-data">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle table-mobile-responsive">
+                <thead class="table-light">
+                    <tr>
+                        <!-- <th style="width: 40px;">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="selectAll">
+                            </div>
+                        </th> -->
+                        <th>資產編號</th>
+                        <th>名稱</th>
+                        <th>分類</th>
+                        <th>保管人</th>
+                        <th>地點</th>
+                        <th>狀態</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for asset in assets %}
+                    <tr class="mobile-card-row">
+                        <!-- <td>
+                            <div class="form-check">
+                                <span class="d-md-none fw-bold me-2">選取資產:</span>
+                                <input class="form-check-input asset-checkbox" type="checkbox" name="asset_ids"
+                                    value="{{ asset.id }}">
+                            </div>
+                        </td> -->
+                        <td data-label="資產編號"><span class="fw-bold text-primary">{{ asset.id }}</span></td>
+                        <td data-label="名稱">{{ asset.name }}</td>
+                        <td data-label="分類">{{ asset.category.name if asset.category else '-' }}</td>
+                        <td data-label="保管人">
+                            <div class="d-flex align-items-center justify-content-end justify-content-md-start">
+                                <div class="avatar-sm glass rounded-circle me-2" style="width: 24px; height: 24px;">
+                                    <img src="https://ui-avatars.com/api/?name={{ asset.custodian.name if asset.custodian else 'Empty' }}&size=24&background=f1f5f9"
+                                        class="rounded-circle">
+                                </div>
+                                <span class="small">{{ asset.custodian.display_name or asset.custodian.name if
+                                    asset.custodian else
+                                    '未配發'
+                                    }}</span>
+                            </div>
+                        </td>
+                        <td data-label="地點">{{ asset.location.name if asset.location else '-' }}</td>
+                        <td data-label="狀態">
+                            {% if asset.status == 'active' %}
+                            <span class="badge bg-success bg-opacity-10 text-dark rounded-pill px-3">使用中</span>
+                            {% elif asset.status == 'in_stock' %}
+                            <span class="badge bg-primary bg-opacity-10 text-dark rounded-pill px-3">在庫</span>
+                            {% elif asset.status == 'disposed' %}
+                            <span class="badge bg-secondary bg-opacity-10 text-dark rounded-pill px-3">已報廢</span>
+                            {% elif asset.status == 'lost' %}
+                            <span class="badge bg-warning bg-opacity-10 text-dark rounded-pill px-3">遺失</span>
+                            {% elif asset.status == 'maintenance' %}
+                            <span class="badge bg-danger bg-opacity-10 text-dark rounded-pill px-3">維修中</span>
+                            {% else %}
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-3">{{
+                                asset.status
+                                }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group w-100 w-md-auto">
+                                <a href="{{ url_for('assets.detail', id=asset.id) }}"
+                                    class="btn btn-sm btn-light border flex-grow-1" title="詳情"><i
+                                        class="fas fa-eye me-1"></i>詳情</a>
+                                <a href="{{ url_for('assets.edit', id=asset.id) }}"
+                                    class="btn btn-sm btn-light border ms-1 flex-grow-1" title="編輯"><i
+                                        class="fas fa-edit me-1"></i>編輯</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-muted">
+                            <i class="fas fa-folder-open fa-3x mb-3 opacity-25"></i>
+                            <p>目前尚無資產資料</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Floating Action Bar -->
+        <div id="floatingBar"
+            class="position-fixed bottom-0 start-50 translate-middle-x mb-4 p-3 rounded shadow glass-card d-none"
+            style="z-index: 1050; min-width: 300px;">
+        <div class="d-flex justify-content-between align-items-center">
+            <span class="fw-bold me-3"><span id="selectedCount">0</span> 項資產已選取</span>
+            <div>
+            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                    data-bs-target="#batchTransferModal">
+                <i class="fas fa-exchange-alt me-2"></i>批次移轉
+            </button>
+            <button type="button" class="btn btn-danger btn-sm ms-2" data-bs-toggle="modal"
+                    data-bs-target="#batchDisposalModal">
+                <i class="fas fa-trash-alt me-2"></i>批次報廢
+            </button>
+            <button type="button" class="btn btn-light btn-sm ms-2 border" id="cancelSelection">取消</button>
+            </div>
+        </div>
+        </div>
+
+        <form method="post">
+        <!-- Batch Transfer Modal -->
+        <div class="modal fade" id="batchTransferModal" tabindex="-1" data-bs-backdrop="false">
+            <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass border-0 shadow-lg">
+                <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">批次資產移轉</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                <p class="text-muted small">您即將移轉 <strong id="modalCount" class="text-primary">0</strong> 項資產。</p>
+
+                <!-- 移轉類型 -->
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">移轉類型</label>
+                    <select name="transfer_type" id="batchTransferType" class="form-select" required
+                            >
+                    <option value="">請選擇移轉類型</option>
+                    <option value="custodian">變更保管人</option>
+                    <option value="warehouse">繳回入庫/變更放置地點</option>
+                    </select>
+                </div>
+
+                <!-- Custodian Transfer Fields -->
+                <div id="batchCustodianFields" class="d-none">
+                    <div class="mb-3">
+                    <label class="form-label small fw-bold">目標部門</label>
+                    <select name="target_dept" id="batchTargetDept" class="form-select">
+                        <option value="">請選擇部門</option>
+                        {% for dept in departments %}
+                        <option value="{{ dept.id }}">{{ dept.name }}</option>
+                        {% endfor %}
+                    </select>
+                    </div>
+                    <div class="mb-3">
+                    <label class="form-label small fw-bold">目標保管人</label>
+                    <select name="target_custodian" id="batchTargetCustodian" class="form-select">
+                        <option value="">請先選擇部門</option>
+                        {% for p in personnel %}
+                        <option value="{{ p.id }}" data-dept="{{ p.department_id }}">{{ p.name }}</option>
+                        {% endfor %}
+                    </select>
+                    </div>
+                </div>
+
+                <!-- Warehouse Transfer Fields -->
+                <div id="batchWarehouseFields" class="d-none">
+                    <div class="mb-3">
+                    <label class="form-label small fw-bold">目標入庫地點 (倉庫)</label>
+                    <select name="target_loc" id="batchTargetLoc" class="form-select">
+                        <option value="">請選擇地點</option>
+                        {% for loc in locations %}
+                        <option value="{{ loc.id }}">{{ loc.name }}</option>
+                        {% endfor %}
+                    </select>
+                    </div>
+                </div>
+
+                <!-- 移轉原因 -->
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">移轉原因</label>
+                    <textarea name="reason" class="form-control" rows="3" required></textarea>
+                </div>
+                </div>
+                <div class="modal-footer border-0">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">取消</button>
+                <button type="submit" class="btn btn-primary"
+                        formaction="{{ url_for('assets.batch_transfer') }}">確認移轉</button>
+                </div>
+            </div>
+            </div>
+        </div>
+
+        <!-- Batch Disposal Modal -->
+        <div class="modal fade" id="batchDisposalModal" tabindex="-1" data-bs-backdrop="false">
+            <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass border-0 shadow-lg">
+                <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold text-danger">批次資產報廢</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                <p class="text-muted small">您即將報廢 <strong id="modalCountDisposal" class="text-danger">0</strong> 項資產。</p>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">報廢方式</label>
+                    <select name="disposal_type" class="form-select" required>
+                    <option value="scrap">實體銷毀</option>
+                    <option value="sell">報廢變賣</option>
+                    <option value="donate">公益捐贈</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">報廢原因</label>
+                    <textarea name="disposal_reason" class="form-control" rows="3"></textarea>
+                </div>
+                </div>
+                <div class="modal-footer border-0">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">取消</button>
+                <button type="submit" class="btn btn-danger"
+                        formaction="{{ url_for('assets.batch_disposal') }}">確認報廢</button>
+                </div>
+            </div>
+            </div>
+        </div>
+        </form>
+        <!-- 匯入資產 Modal -->
+        <div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true"  data-bs-backdrop="false">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content glass border-0 shadow-lg">
+            <div class="modal-header border-0 bg-success text-white">
+                <h5 class="modal-title fw-bold" id="importModalLabel">
+                <i class="fas fa-file-import me-2"></i>匯入資產資料
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="關閉"></button>
+            </div>
+
+            <form id="importForm" action="{{ url_for('assets.import_assets') }}" method="POST" enctype="multipart/form-data">
+                <div class="modal-body">
+                <p class="text-muted small">
+                    請上傳 Excel 或 CSV 檔案，欄位需包含：資產編號、名稱、分類、品牌、型號、序號、所屬公司、歸屬部門、保管人、存放地點、狀態。
+                </p>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">選擇檔案</label>
+                    <input type="file" name="file" class="form-control" accept=".csv,.xlsx" required>
+                </div>
+                <div class="mb-3">
+                    <a href="{{ url_for('assets.download_template') }}" class="btn btn-outline-primary w-100">
+                <i class="fas fa-download me-2"></i>下載範例檔案
+                </a>
+                </div>
+                </div>
+                <div class="modal-footer border-0">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">取消</button>
+                <button type="submit" class="btn btn-success">開始匯入</button>
+                </div>
+            </form>
+            </div>
+        </div>
+        </div>
+
+
+    </form>
+</div>
+{% endblock %}
+<style>
+    .modal { z-index: 1060 !important; }
+    .modal-backdrop { z-index: 1040 !important; }
+</style>
+{% block extra_js %}
+<script>
+    // Transfer logic
+    function toggleBatchTransferFields() {
+        var type = document.getElementById('batchTransferType').value;
+        var custFields = document.getElementById('batchCustodianFields');
+        var whFields = document.getElementById('batchWarehouseFields');
+        var deptSelect = document.getElementById('batchTargetDept');
+        var custSelect = document.getElementById('batchTargetCustodian');
+        var locSelect = document.getElementById('batchTargetLoc');
+
+        if (type === 'custodian') {
+            custFields.classList.remove('d-none');
+            whFields.classList.add('d-none');
+            deptSelect.setAttribute('required', 'required');
+            custSelect.setAttribute('required', 'required');
+            locSelect.removeAttribute('required');
+            locSelect.value = '';
+        } else if (type === 'warehouse') {
+            whFields.classList.remove('d-none');
+            custFields.classList.add('d-none');
+            locSelect.setAttribute('required', 'required');
+            deptSelect.removeAttribute('required');
+            custSelect.removeAttribute('required');
+            deptSelect.value = '';
+            custSelect.value = '';
+        } else {
+            whFields.classList.add('d-none');
+            custFields.classList.add('d-none');
+            deptSelect.removeAttribute('required');
+            custSelect.removeAttribute('required');
+            locSelect.removeAttribute('required');
+        }
+    }
+
+    function filterBatchCustodians() {
+        var deptId = document.getElementById('batchTargetDept').value;
+        var custSelect = document.getElementById('batchTargetCustodian');
+        var options = custSelect.querySelectorAll('option');
+
+        // Reset
+        custSelect.value = '';
+
+        // If no department is selected
+        if (!deptId) {
+            options.forEach(opt => {
+                if (opt.value === '') {
+                    opt.textContent = '請先選擇部門';
+                    opt.style.display = 'block';
+                } else {
+                    opt.style.display = 'none';
+                }
+            });
+            return;
+        }
+
+        // Filter options based on dept
+        options.forEach(opt => {
+            if (opt.value === '') {
+                opt.textContent = '請選擇人員';
+                opt.style.display = 'block';
+            } else {
+                if (opt.getAttribute('data-dept') === deptId) {
+                    opt.style.display = 'block';
+                } else {
+                    opt.style.display = 'none';
+                }
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const selectAll = document.getElementById('selectAll');
+        const checkboxes = document.querySelectorAll('.asset-checkbox');
+        const floatingBar = document.getElementById('floatingBar');
+        const selectedCount = document.getElementById('selectedCount');
+        const modalCount = document.getElementById('modalCount');
+        const cancelBtn = document.getElementById('cancelSelection');
+
+        function updateUI() {
+            const checked = document.querySelectorAll('.asset-checkbox:checked');
+            const count = checked.length;
+
+            selectedCount.textContent = count;
+            modalCount.textContent = count;
+
+            if (count > 0) {
+                floatingBar.classList.remove('d-none');
+            } else {
+                floatingBar.classList.add('d-none');
+            }
+        }
+
+        selectAll.addEventListener('change', function () {
+            checkboxes.forEach(cb => cb.checked = selectAll.checked);
+            updateUI();
+        });
+
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', updateUI);
+        });
+
+        cancelBtn.addEventListener('click', function () {
+            checkboxes.forEach(cb => cb.checked = false);
+            selectAll.checked = false;
+            updateUI();
+        });
+    });
+    
+</script>
+
+{% endblock %}

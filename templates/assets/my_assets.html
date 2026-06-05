@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}我的資產{% endblock %}
+{% block header %}我的資產{% endblock %}
+
+{% block content %}
+<div class="container px-3 py-3">
+    {% if assets %}
+    <p class="text-muted small mb-3"><i class="fas fa-box-open me-1"></i>共 {{ assets|length }} 筆保管資產</p>
+
+    {% for asset in assets %}
+    <a href="{{ url_for('assets.detail', id=asset.id) }}" class="text-decoration-none">
+        <div class="card mb-2 border-0 shadow-sm">
+            <div class="card-body py-3 px-3">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1 text-dark fw-bold">{{ asset.name }}</h6>
+                        <p class="mb-0 small text-muted">
+                            <span class="me-2"><i class="fas fa-barcode me-1"></i>{{ asset.id }}</span>
+                            <span><i class="fas fa-map-marker-alt me-1"></i>{{ asset.location.name if asset.location
+                                else '未設定' }}</span>
+                        </p>
+                    </div>
+                    <div>
+                        {% if asset.status == 'active' %}
+                        <span class="badge bg-success bg-opacity-10 text-success rounded-pill">使用中</span>
+                        {% elif asset.status == 'in_stock' %}
+                        <span class="badge bg-info bg-opacity-10 text-info rounded-pill">在庫</span>
+                        {% elif asset.status == 'repair' %}
+                        <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill">維修中</span>
+                        {% elif asset.status == 'lost' %}
+                        <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill">遺失</span>
+                        {% else %}
+                        <span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill">{{ asset.status
+                            }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+
+    {% else %}
+    <div class="text-center py-5 text-muted">
+        <i class="fas fa-box-open fa-3x mb-3 opacity-25"></i>
+        <p>您目前沒有保管中的資產</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}計畫詳情 | {{ plan.name }}{% endblock %}
+{% block header %}計畫詳情 / {{ plan.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <!-- Back Button -->
+    <div class="mb-4">
+        <a href="{{ url_for('inventory.plan_list') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>返回計畫列表
+        </a>
+    </div>
+
+    <!-- Header & Dashboard -->
+    <div class="card glass-card border-0 shadow-sm p-4 mb-4">
+        <div class="row align-items-center mb-4">
+            <div class="col-md-8">
+                <h4 class="fw-bold mb-1">{{ plan.name }}</h4>
+                <div class="d-flex align-items-center gap-2 mt-2">
+                    <span class="badge bg-light text-dark border">
+                        {{ '區域盤點' if plan.plan_type == 'location' else '全盤' if plan.plan_type == 'full' else '個人盤點' }}
+                    </span>
+                    <span class="text-muted small">
+                        <i class="far fa-calendar-alt me-1"></i>
+                        {{ plan.start_date.strftime('%Y-%m-%d') }} ~ {{ plan.end_date.strftime('%Y-%m-%d') }}
+                    </span>
+
+                    {% if plan.status == 'draft' %}
+                    <span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-3">草稿</span>
+                    {% elif plan.status == 'active' %}
+                    <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3">進行中</span>
+                    {% elif plan.status == 'pending_review' %}
+                    <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill px-3">簽核中</span>
+                    {% elif plan.status == 'completed' %}
+                    <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3">已結案</span>
+                    {% else %}
+                    <span class="badge bg-info bg-opacity-10 text-info rounded-pill px-3">{{ plan.status }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if plan.status == 'active' %}
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <form action="{{ url_for('inventory.close_plan', plan_id=plan.id) }}" method="POST"
+                    onsubmit="return confirm('盤點已完成？即將送出進行簽核。');">
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="fas fa-paper-plane me-2"></i>送出簽核
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="row g-4">
+            <!-- Progress -->
+            <div class="col-md-6 col-lg-3">
+                <div class="bg-light rounded-4 p-3 h-100">
+                    <label class="text-muted small fw-bold mb-2">總體進度</label>
+                    <div class="d-flex align-items-end justify-content-between mb-2">
+                        <h2 class="fw-bold mb-0 text-primary">{{ stats.progress }}%</h2>
+                        <small class="text-muted">{{ stats.scanned_assets }} / {{ stats.total_assets }}</small>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar bg-primary" style="width: {{ stats.progress }}%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="col-md-6 col-lg-3">
+                <div class="bg-light rounded-4 p-3 h-100 d-flex align-items-center justify-content-between">
+                    <div>
+                        <label class="text-muted small fw-bold d-block mb-1">應盤資產</label>
+                        <h3 class="fw-bold mb-0">{{ stats.total_assets }}</h3>
+                    </div>
+                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-3">
+                        <i class="fas fa-boxes fa-lg"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <div class="bg-light rounded-4 p-3 h-100 d-flex align-items-center justify-content-between">
+                    <div>
+                        <label class="text-muted small fw-bold d-block mb-1">已盤點</label>
+                        <h3 class="fw-bold mb-0 text-success">{{ stats.scanned_assets }}</h3>
+                    </div>
+                    <div class="bg-success bg-opacity-10 text-success rounded-circle p-3">
+                        <i class="fas fa-check-circle fa-lg"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <div class="bg-light rounded-4 p-3 h-100 d-flex align-items-center justify-content-between">
+                    <div>
+                        <label class="text-muted small fw-bold d-block mb-1">異常/未到</label>
+                        <h3 class="fw-bold mb-0 text-danger">{{ stats.abnormal_assets + (stats.total_assets -
+                            stats.scanned_assets) if plan.status == 'completed' else stats.abnormal_assets }}</h3>
+                    </div>
+                    <div class="bg-danger bg-opacity-10 text-danger rounded-circle p-3">
+                        <i class="fas fa-exclamation-triangle fa-lg"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Task List -->
+    <div class="card glass-card border-0 shadow-sm p-4">
+        <h5 class="fw-bold mb-4">盤點任務清單</h5>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>負責人</th>
+                        <th>盤點區域/對象</th>
+                        <th>進度</th>
+                        <th>異常數</th>
+                        <th>狀態</th>
+                        <th class="text-end">詳細報告</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in tasks %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-2"
+                                    style="width: 32px; height: 32px;">
+                                    {{ task.assignee[0] }}
+                                </div>
+                                <span class="fw-bold">{{ task.assignee }}</span>
+                            </div>
+                        </td>
+                        <td>{{ task.location }}</td>
+                        <td style="min-width: 150px;">
+                            <div class="d-flex align-items-center">
+                                <div class="progress flex-grow-1 me-2" style="height: 6px;">
+                                    <div class="progress-bar bg-success" style="width: {{ task.progress }}%"></div>
+                                </div>
+                                <small class="text-muted">{{ task.scanned }} / {{ task.total }}</small>
+                            </div>
+                        </td>
+                        <td>
+                            {% if task.abnormal > 0 %}
+                            <span class="badge bg-danger bg-opacity-10 text-danger">{{ task.abnormal }}</span>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if task.status == 'pending' %}
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary">待處理</span>
+                            {% elif task.status == 'pending_review' %}
+                            <span class="badge bg-warning bg-opacity-10 text-warning">簽核中</span>
+                            {% elif task.status == 'completed' %}
+                            <span class="badge bg-success bg-opacity-10 text-success">已完成</span>
+                            {% else %}
+                            <span class="badge bg-light text-dark border">{{ task.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a href="{{ url_for('inventory.view_report', task_id=task.id) }}"
+                                class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-file-alt me-1"></i>查看報告
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">包含的任務將顯示於此</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

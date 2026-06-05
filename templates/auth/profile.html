@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}個人設定{% endblock %}
+{% block header %}個人設定{% endblock %}
+
+{% block content %}
+<div class="container py-3" style="max-width: 600px;">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <!-- 個人資訊 -->
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+            <h6 class="card-title fw-bold mb-3"><i class="fas fa-user me-2"></i>個人資訊</h6>
+            <div class="row g-2">
+                <div class="col-4 text-muted small">帳號</div>
+                <div class="col-8 fw-bold">{{ current_user.username }}</div>
+                <div class="col-4 text-muted small">姓名</div>
+                <div class="col-8">{{ current_user.display_name or (current_user.personnel.name if
+                    current_user.personnel else '-') }}</div>
+                <div class="col-4 text-muted small">角色</div>
+                <div class="col-8">
+                    {% if current_user.role %}
+                    <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill">{{
+                        current_user.role.display_name or current_user.role.name }}</span>
+                    {% else %}-{% endif %}
+                </div>
+                {% if current_user.personnel %}
+                <div class="col-4 text-muted small">部門</div>
+                <div class="col-8">{{ current_user.personnel.department.name if current_user.personnel.department else
+                    '-' }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('auth.profile') }}">
+        <!-- 修改密碼 -->
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body">
+                <h6 class="card-title fw-bold mb-3"><i class="fas fa-lock me-2"></i>修改密碼</h6>
+                <div class="mb-2">
+                    <label class="form-label small">新密碼 <span class="text-muted">(最少 6 碼)</span></label>
+                    <input type="password" name="new_password" class="form-control" placeholder="留空表示不修改" minlength="6">
+                </div>
+            </div>
+        </div>
+
+        <!-- 代理盤點設定（僅高階主管可見） -->
+        {% if current_user.is_senior_approver %}
+        <div class="card border-0 shadow-sm mb-3 border-start border-primary border-3">
+            <div class="card-body">
+                <h6 class="card-title fw-bold mb-1"><i class="fas fa-users-cog me-2"></i>代理盤點設定</h6>
+                <p class="text-muted small mb-3">指定一位同仁在盤點期間代替您執行盤點任務。</p>
+                <div class="mb-2">
+                    <label class="form-label small fw-bold">代理盤點人</label>
+                    <select name="proxy_user_id" class="form-select">
+                        <option value="0">— 不指定代理人 —</option>
+                        {% for u in proxy_candidates %}
+                        <option value="{{ u.id }}" {% if current_user.proxy_user_id==u.id %}selected{% endif %}>
+                            {{ u.display_name or u.username }}
+                            {% if u.personnel %} ({{ u.personnel.department.name if u.personnel.department else '' }}){%
+                            endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% if current_user.proxy_user_id %}
+                <div class="alert alert-info small mt-2 mb-0 py-2">
+                    <i class="fas fa-info-circle me-1"></i>
+                    目前代理人：<strong>
+                        {% for u in proxy_candidates %}
+                        {% if u.id == current_user.proxy_user_id %}{{ u.display_name or u.username }}{% endif %}
+                        {% endfor %}
+                    </strong>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <button type="submit" class="btn btn-primary w-100 mb-4">
+            <i class="fas fa-save me-1"></i>儲存設定
+        </button>
+    </form>
+</div>
+{% endblock %}

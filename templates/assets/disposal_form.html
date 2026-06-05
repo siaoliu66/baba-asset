@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}編輯報廢申請{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h4 class="fw-bold"><i class="fas fa-trash-alt me-2"></i>編輯報廢申請</h4>
+        <p class="text-muted">資產編號: <strong>{{ disposal.asset_id }}</strong></p>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        <form method="post">
+            <div class="row g-3">
+                <!-- Disposal Type -->
+                <div class="col-md-6">
+                    <label for="disposal_type" class="form-label">報廢類型 <span class="text-danger">*</span></label>
+                    <select class="form-select" id="disposal_type" name="disposal_type" required>
+                        <option value="scrap" {{ 'selected' if disposal.disposal_type=='scrap' else '' }}>報廢 (Scrap)
+                        </option>
+                        <option value="donate" {{ 'selected' if disposal.disposal_type=='donate' else '' }}>捐贈 (Donate)
+                        </option>
+                        <option value="sell" {{ 'selected' if disposal.disposal_type=='sell' else '' }}>變賣 (Sell)
+                        </option>
+                    </select>
+                </div>
+
+                <!-- Disposal Value -->
+                <div class="col-md-6">
+                    <label for="disposal_value" class="form-label">處分金額 (如有)</label>
+                    <input type="number" step="0.01" class="form-control" id="disposal_value" name="disposal_value"
+                        value="{{ disposal.disposal_value or '' }}">
+                </div>
+
+                <!-- Reason -->
+                <div class="col-12">
+                    <label for="reason" class="form-label">報廢原因 <span class="text-danger">*</span></label>
+                    <textarea class="form-control" id="reason" name="reason" rows="4"
+                        required>{{ disposal.reason or '' }}</textarea>
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('assets.disposal_list') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>返回列表
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i>儲存變更
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}發起盤點{% endblock %}
+{% block header %}建立新盤點計畫{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card glass-card border-0 shadow-sm p-4">
+            <form action="{{ url_for('inventory.create_plan') }}" method="POST">
+                <div class="row g-4">
+                    <div class="col-12">
+                        <label class="form-label fw-bold">計畫名稱 <span class="text-danger">*</span></label>
+                        <input type="text" name="name" class="form-control form-control-lg"
+                            placeholder="例如: 2026 第一季例行資產盤點" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">計畫類型</label>
+                        <select name="plan_type" class="form-select">
+                            <option value="location">區域盤點 (Location-based)</option>
+                            <option value="personal">個人資產盤點 (Self-check)</option>
+                            <option value="full">全公司大盤點 (Full Scan)</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">關聯公司</label>
+                        <select name="company_id" class="form-select">
+                            <option value="1">總公司</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">開始日期</label>
+                        <input type="date" name="start_date" class="form-control" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">結束日期</label>
+                        <input type="date" name="end_date" class="form-control" required>
+                    </div>
+
+                    <div class="col-12 mt-4">
+                        <label class="form-label fw-bold">選擇盤點區域 (可多選)</label>
+                        <div class="row g-2">
+                            {% for loc in locations %}
+                            <div class="col-md-4">
+                                <div class="p-3 border rounded-3 hover-bg-light">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="locations"
+                                            value="{{ loc.id }}" id="loc{{ loc.id }}">
+                                        <label class="form-check-label ms-1" for="loc{{ loc.id }}">
+                                            {{ loc.name }}
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="col-12 mt-4">
+                        <label class="form-label fw-bold">分配盤點人員 (可多選)</label>
+                          <select id="assignees" name="assignees" class="form-select" multiple>
+                            {% for person in personnel %}
+                            {% if person.user %}
+                                <option value="{{ person.user.id }}">{{ person.name }}</option>
+                            {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+
+
+                    <div class="col-12 mt-5">
+                        <div class="alert alert-info border-0 glass-card">
+                            <i class="fas fa-info-circle me-2"></i>
+                            建立計畫後，系統將自動拍攝「帳面資產快照 (Snapshots)」，以當前數據作為盤點基準。
+                        </div>
+                    </div>
+
+                    <div class="col-12 mt-4">
+                        <hr class="opacity-10 mb-4">
+                        <div class="d-flex justify-content-end">
+                            <a href="{{ url_for('inventory.plan_list') }}" class="btn btn-light px-4 me-2 border">取消</a>
+                            <button type="submit" class="btn btn-primary px-5">建立盤點計畫</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

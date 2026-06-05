@@ -1,0 +1,400 @@
+:root {
+    /* Enterprise Palette */
+    --primary-color: #2563eb;
+    /* Royal Blue */
+    --secondary-color: #64748b;
+    /* Slate Gray */
+    --success-color: #10b981;
+    /* Emerald */
+    --warning-color: #f59e0b;
+    /* Amber */
+    --danger-color: #ef4444;
+    /* Red */
+
+    /* Backgrounds */
+    --body-bg: #f5f7fa;
+    /* Warm Gray/White */
+    --sidebar-bg: #ffffff;
+    /* Pure White */
+    --sidebar-width: 260px;
+    --sidebar-border: #e2e8f0;
+    /* Light Gray Border */
+
+    /* Text */
+    --text-primary: #1e293b;
+    /* Slate 800 */
+    --text-secondary: #475569;
+    /* Slate 600 */
+
+    /* Cards */
+    --card-bg: #ffffff;
+    --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    --hover-bg: #eff6ff;
+}
+
+body {
+    font-family: 'Inter', 'Noto Sans TC', sans-serif;
+    background: var(--body-bg);
+    color: var(--text-primary);
+    overflow-x: hidden;
+    line-height: 1.5;
+}
+
+/* Unified Card Style (Replaces Glass) */
+.glass,
+.glass-card,
+.card {
+    background: var(--card-bg) !important;
+    border: 1px solid var(--sidebar-border) !important;
+    border-radius: 12px;
+    box-shadow: var(--card-shadow);
+    backdrop-filter: none !important;
+}
+
+.glass-card {
+    padding: 24px;
+}
+
+/* Sidebar Styling */
+.sidebar {
+    width: var(--sidebar-width);
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--sidebar-border);
+    color: var(--text-primary);
+    z-index: 1000;
+    padding-top: 20px;
+}
+
+.sidebar .brand {
+    padding: 0 24px 30px;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+}
+
+.nav-link {
+    color: var(--text-secondary) !important;
+    padding: 12px 24px;
+    font-weight: 500;
+    border-radius: 0 24px 24px 0;
+    margin-right: 12px;
+}
+
+.sidebar-nav {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-item {
+    margin: 4px 0;
+}
+
+.nav-link:hover {
+    color: var(--primary-color) !important;
+    background: var(--hover-bg);
+}
+
+.nav-link.active {
+    background: var(--hover-bg);
+    color: var(--primary-color) !important;
+    border-left: 3px solid var(--primary-color);
+    border-radius: 0 24px 24px 0;
+    /* Align with others but keep left border */
+    font-weight: 600;
+    box-shadow: none;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    border: 1px solid var(--primary-color);
+}
+
+.btn-primary:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.5);
+}
+
+/* Main Content Area */
+.main-content {
+    margin-left: var(--sidebar-width);
+    padding: 30px;
+    min-height: 100vh;
+    transition: margin-left 0.3s ease;
+}
+
+/* Login Page Update */
+.login-container {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--body-bg);
+}
+
+.login-card {
+    background: white !important;
+    border: 1px solid var(--sidebar-border) !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    color: var(--text-primary);
+}
+
+/* Table Style */
+.table {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.table thead th {
+    background: #f8f9fa;
+    border-bottom: none;
+    color: #636e72;
+    font-weight: 600;
+    padding: 15px;
+}
+
+.table td {
+    padding: 15px;
+    vertical-align: middle;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease forwards;
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+    .sidebar {
+        display: none;
+    }
+
+    .main-content {
+        margin-left: 0;
+        padding: 15px;
+        padding-top: 70px;
+        /* Space for fixed header */
+        padding-bottom: 90px;
+        /* Space for bottom nav */
+    }
+
+    .header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 1001;
+        background: white;
+        padding: 10px 15px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .header h2 {
+        font-size: 1.1rem;
+        margin-bottom: 0;
+    }
+
+    .bottom-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background: white;
+        border-top: 1px solid var(--sidebar-border);
+        display: flex;
+        justify-content: space-around;
+        padding: 12px 0;
+        z-index: 9999;
+        box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.05);
+        padding-bottom: calc(12px + env(safe-area-inset-bottom));
+    }
+
+    .bottom-nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        color: var(--text-secondary);
+        text-decoration: none !important;
+        font-size: 0.7rem;
+        transition: all 0.2s ease;
+        flex: 1;
+    }
+
+    .bottom-nav-item i {
+        font-size: 1.4rem;
+        margin-bottom: 4px;
+    }
+
+    .bottom-nav-item.active {
+        color: var(--primary-color);
+        font-weight: 700;
+    }
+
+    /* Central Scan Button */
+    .scan-btn-wrapper {
+        position: relative;
+        top: -30px;
+        flex: 0 0 70px;
+    }
+
+    .scan-btn {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        color: white !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+        border: 5px solid white;
+        transition: transform 0.2s ease;
+    }
+
+    .scan-btn:active {
+        transform: scale(0.9);
+    }
+
+    /* Card Layout for Tables on Mobile */
+    .mobile-card-row {
+        display: block;
+        background: white;
+        margin-bottom: 15px;
+        padding: 15px;
+        border-radius: 12px;
+        box-shadow: var(--card-shadow);
+        border: 1px solid var(--sidebar-border);
+    }
+
+    .table-mobile-responsive thead {
+        display: none;
+        /* Hide headers on mobile */
+    }
+
+    .table-mobile-responsive tbody,
+    .table-mobile-responsive tr,
+    .table-mobile-responsive td {
+        display: block;
+        width: 100%;
+        border: none;
+    }
+
+    .table-mobile-responsive td {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 0.9rem;
+    }
+
+    .table-mobile-responsive td:last-child {
+        border-bottom: none;
+        margin-top: 10px;
+        padding-top: 15px;
+    }
+
+    .table-mobile-responsive td::before {
+        content: attr(data-label);
+        font-weight: 700;
+        color: var(--text-secondary);
+    }
+}
+
+/* User Menu for Mobile */
+.mobile-user-menu {
+    border-radius: 16px !important;
+    border: none !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1) !important;
+    margin-top: 10px !important;
+}
+
+.mobile-user-menu .dropdown-item {
+    padding: 12px 20px;
+    font-weight: 500;
+}
+
+/* Hide Bottom Nav on Desktop */
+@media (min-width: 769px) {
+    .bottom-nav {
+        display: none;
+    }
+}
+/* Modal Fixes for Backdrop Issue */
+.modal {
+    z-index: 1055 !important;
+}
+.modal-backdrop {
+    z-index: 1050 !important;
+}
+.modal-content {
+    background-color: #fff !important;
+    opacity: 1 !important;
+    backdrop-filter: none !important;
+}
+
+/* ===== Mobile Header Back Button ===== */
+.mobile-back-btn {
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-primary);
+    padding: 0;
+    margin-right: 8px;
+}
+
+.mobile-back-btn:active {
+    transform: scale(0.9);
+}
+
+/* ===== QR Scanner Modal ===== */
+#qr-reader {
+    position: relative;
+    overflow: hidden;
+}
+
+#qr-reader video {
+    width: 100% !important;
+    border-radius: 0;
+}
+
+@media (max-width: 768px) {
+    #qrScannerModal .modal-dialog {
+        margin: 0;
+        min-height: 100vh;
+    }
+
+    #qrScannerModal .modal-content {
+        border-radius: 0 !important;
+        min-height: 100vh;
+    }
+
+    /* Hide the duplicate header text on mobile dashboard */
+    body.page-dashboard .header h2 {
+        font-size: 0.95rem;
+    }
+}

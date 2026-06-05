@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}{{ '編輯' if dept else '新增' }}部門{% endblock %}
+{% block header %}{{ '編輯' if dept else '新增' }}部門{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card glass-card border-0 shadow-sm p-4">
+            <form
+                action="{{ url_for('settings.department_edit', id=dept.id) if dept else url_for('settings.department_create') }}"
+                method="POST">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">部門名稱 <span class="text-danger">*</span></label>
+                        <input type="text" name="name" class="form-control" value="{{ dept.name if dept else '' }}"
+                            required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">顯示名稱</label>
+                        <input type="text" name="display_name" class="form-control"
+                            value="{{ dept.display_name if dept else '' }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">部門代碼</label>
+                        <input type="text" name="code" class="form-control" value="{{ dept.code if dept else '' }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">所屬公司</label>
+                        <select name="company_id" class="form-select">
+                            <option value="">-- 請選擇 --</option>
+                            {% for c in companies %}
+                            <option value="{{ c.id }}" {% if dept and dept.company_id==c.id %}selected{% endif %}>{{
+                                c.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">上級部門</label>
+                        <select name="parent_id" class="form-select">
+                            <option value="">-- 頂層部門 --</option>
+                            {% for d in departments %}
+                            <option value="{{ d.id }}" {% if dept and dept.parent_id==d.id %}selected{% endif %}>{{
+                                d.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">部門主管</label>
+                        <select name="manager_id" class="form-select">
+                            <option value="">-- 請選擇主管 --</option>
+                            {% for p in personnel %}
+                            <option value="{{ p.id }}" {% if dept and dept.manager_id==p.id %}selected{% endif %}>
+                                {{ p.name }} ({{ p.position or '無職稱' }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">排序</label>
+                        <input type="number" name="sort_order" class="form-control"
+                            value="{{ dept.sort_order if dept else 0 }}">
+                    </div>
+                    <div class="col-12 mt-4">
+                        <hr class="opacity-10 mb-4">
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('settings.department_list') }}" class="btn btn-light border px-4"><i
+                                    class="fas fa-arrow-left me-2"></i>返回列表</a>
+                            <button type="submit" class="btn btn-primary px-5"><i
+                                    class="fas fa-save me-2"></i>儲存</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}編輯移轉申請{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h4 class="fw-bold"><i class="fas fa-exchange-alt me-2"></i>編輯移轉申請</h4>
+        <p class="text-muted">資產編號: <strong>{{ transfer.asset_id }}</strong></p>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        <form method="post">
+            <div class="row g-3">
+                <!-- Reason -->
+                <div class="col-12">
+                    <label for="reason" class="form-label">移轉原因 <span class="text-danger">*</span></label>
+                    <textarea class="form-control" id="reason" name="reason" rows="3"
+                        required>{{ transfer.reason or '' }}</textarea>
+                </div>
+
+                <!-- To Custodian -->
+                <div class="col-md-4">
+                    <label for="to_custodian_id" class="form-label">新保管人</label>
+                    <select class="form-select" id="to_custodian_id" name="to_custodian_id">
+                        <option value="">-- 不變更 --</option>
+                        {% for p in personnel %}
+                        <option value="{{ p.id }}" {{ 'selected' if transfer.to_custodian_id==p.id else '' }}>
+                            {{ p.name }} ({{ p.employee_id or '無工號' }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- To Location -->
+                <div class="col-md-4">
+                    <label for="to_location_id" class="form-label">新地點</label>
+                    <select class="form-select" id="to_location_id" name="to_location_id">
+                        <option value="">-- 不變更 --</option>
+                        {% for loc in locations %}
+                        <option value="{{ loc.id }}" {{ 'selected' if transfer.to_location_id==loc.id else '' }}>
+                            {{ loc.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- To Department -->
+                <div class="col-md-4">
+                    <label for="to_department_id" class="form-label">新部門</label>
+                    <select class="form-select" id="to_department_id" name="to_department_id">
+                        <option value="">-- 不變更 --</option>
+                        {% for dept in departments %}
+                        <option value="{{ dept.id }}" {{ 'selected' if transfer.to_department_id==dept.id else '' }}>
+                            {{ dept.display_name or dept.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('assets.transfer_list') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>返回列表
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i>儲存變更
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}{{ '編輯使用者' if user else '新增使用者' }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h4 class="fw-bold">
+            <i class="fas fa-user-plus me-2"></i>
+            {{ '編輯使用者' if user else '新增使用者' }}
+        </h4>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        <form method="post">
+            <div class="row g-3">
+                <!-- Username -->
+                <div class="col-md-6">
+                    <label for="username" class="form-label">帳號 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="username" name="username"
+                        value="{{ user.username if user else '' }}" required>
+                </div>
+
+                <!-- Password -->
+                <div class="col-md-6">
+                    <label for="password" class="form-label">
+                        密碼
+                        {% if user %}
+                        <small class="text-muted">(留空則不修改)</small>
+                        {% else %}
+                        <span class="text-danger">*</span>
+                        {% endif %}
+                    </label>
+                    <input type="password" class="form-control" id="password" name="password" {{ '' if user
+                        else 'required' }}>
+                </div>
+
+                <!-- Display Name -->
+                <div class="col-md-6">
+                    <label for="display_name" class="form-label">顯示名稱</label>
+                    <input type="text" class="form-control" id="display_name" name="display_name"
+                        value="{{ user.display_name if user else '' }}">
+                </div>
+
+                <!-- Email -->
+                <div class="col-md-6">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="email" name="email"
+                        value="{{ user.email if user else '' }}">
+                </div>
+
+                <!-- Role Selection -->
+                <div class="col-md-6">
+                    <label for="role_id" class="form-label">角色 <span class="text-danger">*</span></label>
+                    <select class="form-select" id="role_id" name="role_id" required>
+                        <option value="">-- 請選擇角色 --</option>
+                        {% for role in roles %}
+                        <option value="{{ role.id }}" {{ 'selected' if user and user.role_id==role.id else '' }}>
+                            {{ role.display_name }} ({{ role.name }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Personnel Link -->
+                <div class="col-md-6">
+                    <label for="personnel_id" class="form-label">綁定人員 (HR 資料)</label>
+                    <select class="form-select" id="personnel_id" name="personnel_id">
+                        <option value="">-- 不綁定 --</option>
+                        {% for person in personnel %}
+                        <option value="{{ person.id }}" {{ 'selected' if user and user.personnel_id==person.id else ''
+                            }}>
+                            {{ person.name }} ({{ person.employee_id or '無工號' }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div class="form-text">綁定後，此帳號的盤點任務將自動關聯該人員的保管資產</div>
+                </div>
+
+                <!-- Flags -->
+                <div class="col-md-6">
+                    <div class="form-check form-switch mt-4">
+                        <input class="form-check-input" type="checkbox" id="is_active" name="is_active" {{ 'checked' if
+                            (user and user.is_active) or not user else '' }}>
+                        <label class="form-check-label" for="is_active">帳號啟用</label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-check form-switch mt-4">
+                        <input class="form-check-input" type="checkbox" id="is_senior_approver"
+                            name="is_senior_approver" {{ 'checked' if user and user.is_senior_approver else '' }}>
+                        <label class="form-check-label" for="is_senior_approver">高階簽核權限</label>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('settings.user_list') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>返回列表
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i>儲存
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+{% block title %}待簽核事項{% endblock %}
+{% block header %}我的簽核清單{% endblock %}
+
+{% block content %}
+<div class="card glass-card border-0 shadow-sm p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h5 class="fw-bold mb-0">處理中申請</h5>
+    </div>
+
+    <!-- Desktop Table View -->
+    <div class="table-responsive d-none d-md-block">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>類型</th>
+                    <th>單據編號</th>
+                    <th>申請人</th>
+                    <th>目前階段</th>
+                    <th>申請日期</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in requests %}
+                <tr>
+                    <td>
+                        <span class="badge bg-secondary bg-opacity-10 text-secondary px-3">
+                            {{ '資產移轉' if req.reference_type == 'transfer' else '盤點計畫' if req.reference_type ==
+                            'inventory_plan' else '盤點任務' if req.reference_type == 'inventory_task' else req.reference_type }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="fw-bold">
+                            {% if req.reference_type == 'inventory_task' %}
+                            <a href="{{ url_for('inventory.view_report', task_id=req.reference_id) }}"
+                                class="text-decoration-none" target="_blank">
+                                #{{ req.reference_id }} <i class="fas fa-file-alt small ms-1" title="查看盤點報告"></i>
+                            </a>
+                            {% elif req.reference_type == 'transfer' %}
+                            <a href="#" class="text-decoration-none">#{{ req.reference_id }}</a>
+                            {% else %}
+                            #{{ req.reference_id }}
+                            {% endif %}
+                        </span>
+                    </td>
+                    <td>{{ req.submitter_name }}</td>
+                    <td>第 {{ req.step_order }} 階段</td>
+                    <td>2026-01-30</td>
+                    <td>
+                        <button class="btn btn-sm btn-success px-3" data-bs-toggle="modal"
+                            data-bs-target="#approveModal{{ req.id }}">
+                            <i class="fas fa-check me-1"></i>核准
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger px-3 ms-1" data-bs-toggle="modal"
+                            data-bs-target="#rejectModal{{ req.id }}">
+                            <i class="fas fa-times me-1"></i>駁回
+                        </button>
+                    </td>
+                </tr>
+
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center py-5 text-muted">
+                        <i class="fas fa-check-double fa-3x mb-3 opacity-25"></i>
+                        <p>目前沒有待處理的簽核件</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Mobile Card View -->
+    <div class="d-md-none">
+        {% for req in requests %}
+        <div class="card border mb-3 shadow-sm">
+            <div class="card-body p-3">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="badge bg-primary bg-opacity-10 text-primary">
+                        {{ '資產移轉' if req.reference_type == 'transfer' else '盤點計畫' if req.reference_type == 'inventory_plan' else '盤點任務' }}
+                    </span>
+                    <small class="text-muted">2026-01-30</small>
+                </div>
+                <h6 class="fw-bold mb-1">
+                    {% if req.reference_type == 'inventory_task' %}
+                    <a href="{{ url_for('inventory.view_report', task_id=req.reference_id) }}" class="text-decoration-none text-dark">
+                        單號 #{{ req.reference_id }} <i class="fas fa-external-link-alt text-primary small ms-1"></i>
+                    </a>
+                    {% else %}
+                    單號 #{{ req.reference_id }}
+                    {% endif %}
+                </h6>
+                <div class="text-muted small mb-3">
+                    申請人: <span class="text-dark fw-bold">{{ req.submitter_name }}</span>
+                    <span class="mx-2">|</span>
+                    階段: <span class="text-dark fw-bold">{{ req.step_order }}</span>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-success flex-fill" data-bs-toggle="modal" data-bs-target="#approveModal{{ req.id }}">
+                        <i class="fas fa-check me-2"></i>核准
+                    </button>
+                    <button class="btn btn-outline-danger flex-fill" data-bs-toggle="modal" data-bs-target="#rejectModal{{ req.id }}">
+                        <i class="fas fa-times me-2"></i>駁回
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+            <i class="fas fa-check-double fa-3x mb-3 opacity-25"></i>
+            <p>目前沒有待處理的簽核件</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% block modals %}
+{% for req in requests %}
+<!-- Approval Modal -->
+<div class="modal fade" id="approveModal{{ req.id }}" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <form action="{{ url_for('workflows.approve_record', record_id=req.id) }}" method="POST"
+                class="approval-form">
+                <input type="hidden" name="action" value="approve">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold">核准申請</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted">請確認是否核准此項申請（單據 #{{ req.reference_id }}）。</p>
+                    <label class="form-label small fw-bold">核准意見</label>
+                    <textarea name="comment" class="form-control" rows="3" placeholder="請輸入意見 (選填)"></textarea>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-success px-4 submit-btn">確認核准</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Reject Modal -->
+<div class="modal fade" id="rejectModal{{ req.id }}" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <form action="{{ url_for('workflows.approve_record', record_id=req.id) }}" method="POST"
+                class="approval-form">
+                <input type="hidden" name="action" value="reject">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold text-danger">駁回申請</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted">駁回後，流程將重置為「草稿」狀態，申請人需修改後重新送審。</p>
+                    <label class="form-label small fw-bold text-danger">駁回原因 <span class="text-danger">*</span></label>
+                    <textarea name="comment" class="form-control" rows="3" placeholder="請輸入駁回原因 (必填)"
+                        required></textarea>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-danger px-4 submit-btn">確認駁回</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function () {
+        // Form submission handling
+        $('.approval-form').on('submit', function () {
+            const $form = $(this);
+            const $btn = $form.find('.submit-btn');
+
+            // Show loading state
+            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i>處理中...');
+
+            // Allow time for submit to process
+            setTimeout(function () { }, 5000);
+        });
+
+        // FORCE FIX: Move modals to body to prevent backdrop issues
+        $('.modal').appendTo('body');
+    });
+</script>
+{% endblock %}

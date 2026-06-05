@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+{% block title %}{{ '編輯' if config else '新增' }}簽核流程設定{% endblock %}
+{% block header %}{{ '編輯' if config else '新增' }}簽核流程設定{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Left Sidebar: Basic Settings -->
+    <div class="col-lg-5">
+        <div class="card glass-card border-0 shadow-sm p-4 mb-4 position-sticky top-0" style="z-index: 100;">
+            <h6 class="fw-bold mb-4"><i class="fas fa-cog me-2 text-primary"></i>基本設定</h6>
+            <form
+                action="{{ url_for('workflows.config_edit', id=config.id) if config else url_for('workflows.config_create') }}"
+                method="POST">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label fw-bold">流程名稱</label>
+                        <input type="text" name="name" class="form-control" value="{{ config.name if config else '' }}"
+                            placeholder="例如：一般資產移轉流程">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-bold">流程類型 <span class="text-danger">*</span></label>
+                        <select name="workflow_type" class="form-select" required>
+                            <option value="">-- 請選擇 --</option>
+                            <option value="transfer" {% if config and config.workflow_type=='transfer' %}selected{%
+                                endif %}>資產移轉</option>
+                            <option value="disposal" {% if config and config.workflow_type=='disposal' %}selected{%
+                                endif %}>資產報廢</option>
+                            <option value="personal_inventory" {% if config and
+                                config.workflow_type=='personal_inventory' %}selected{% endif %}>個人盤點</option>
+                            <option value="location_inventory" {% if config and
+                                config.workflow_type=='location_inventory' %}selected{% endif %}>據點盤點</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-bold">適用範圍類型</label>
+                        <select name="scope_type" class="form-select" id="scopeType">
+                            <option value="global" {% if config and config.scope_type=='global' %}selected{% endif %}>
+                                全公司通用</option>
+                            <option value="company" {% if config and config.scope_type=='company' %}selected{% endif %}>
+                                特定公司</option>
+                            <option value="department" {% if config and config.scope_type=='department' %}selected{%
+                                endif %}>特定部門</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-bold">適用對象 ID</label>
+                        <select name="scope_id" class="form-select" id="scopeId">
+                            <option value="0">-- 通用 --</option>
+                            {% for c in companies %}
+                            <option value="{{ c.id }}" data-type="company" {% if config and config.scope_id==c.id
+                                %}selected{% endif %}>公司: {{ c.name }}</option>
+                            {% endfor %}
+                            {% for d in departments %}
+                            <option value="{{ d.id }}" data-type="department" {% if config and config.scope_id==d.id
+                                %}selected{% endif %}>部門: {{ d.display_name or d.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-12">
+                        <hr class="opacity-10 my-3">
+                        <h6 class="fw-bold mb-3"><i class="fas fa-toggle-on me-2 text-primary"></i>狀態設定</h6>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-check form-switch">
+                            <input type="checkbox" name="is_active" class="form-check-input" id="isActive" {{ 'checked'
+                                if (config and config.is_active) or not config }}>
+                            <label class="form-check-label" for="isActive">啟用此流程</label>
+                        </div>
+                    </div>
+
+                    <div class="col-12 mt-4">
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary"><i class="fas fa-save me-2"></i>儲存設定</button>
+                            <a href="{{ url_for('workflows.config_list') }}" class="btn btn-light border"><i
+                                    class="fas fa-arrow-left me-2"></i>返回列表</a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Right Main Area: Steps (only show when editing) -->
+    {% if config %}
+    <div class="col-lg-7">
+        <div class="card glass-card border-0 shadow-sm p-4">
+            <h6 class="fw-bold mb-4"><i class="fas fa-list-ol me-2 text-primary"></i>定義簽核步驟</h6>
+            <p class="text-muted small mb-4">請依照順序新增簽核關卡。系統將嚴格按照此順序執行。</p>
+
+            {% if config.steps %}
+            <div class="list-group mb-5 shadow-sm">
+                {% for step in config.steps|sort(attribute='step_order') %}
+                <div class="list-group-item d-flex justify-content-between align-items-center p-3">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+                            style="width: 32px; height: 32px; font-weight: bold;">{{ step.step_order }}</div>
+                        <div>
+                            <h6 class="mb-1 fw-bold">{{ step.step_name }}</h6>
+                            <small class="text-muted">
+                                {% if step.approver_type == 'department_manager' %}
+                                <i class="fas fa-sitemap me-1"></i> 部門主管 (自動對應)
+                                {% elif step.approver_type == 'role' %}
+                                <i class="fas fa-users me-1"></i> 角色群組: <span class="badge bg-info text-dark">{{
+                                    step.approver_role.display_name if step.approver_role
+                                    else '未指定' }}</span>
+                                {% elif step.approver_type == 'specific_user' %}
+                                <i class="fas fa-user me-1"></i> 指定人員: <span class="badge bg-success">{{
+                                    step.approver_user.display_name if step.approver_user
+                                    else '未指定' }}</span>
+                                {% elif step.approver_type == 'self_select' %}
+                                <i class="fas fa-hand-pointer me-1"></i> 申請者自選
+                                {% else %}
+                                {{ step.approver_type }}
+                                {% endif %}
+                            </small>
+                            {% if step.can_skip %}
+                            <span class="badge bg-secondary ms-2">可跳過</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <form action="{{ url_for('workflows.step_delete', step_id=step.id) }}" method="POST"
+                        class="d-inline">
+                        <button type="submit" class="btn btn-link text-danger p-0" onclick="return confirm('確定刪除此步驟？')">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center text-muted py-5 mb-4 border rounded bg-light">
+                <i class="fas fa-stream fa-3x mb-3 text-secondary"></i>
+                <h5>目前沒有任何簽核步驟</h5>
+                <p class="mb-0">請使用下方表單新增第一道關卡</p>
+            </div>
+            {% endif %}
+
+            <div class="card bg-light border-0 p-4">
+                <h6 class="fw-bold mb-3"><i class="fas fa-plus-circle me-2"></i>新增步驟</h6>
+                <form action="{{ url_for('workflows.step_add', config_id=config.id) }}" method="POST">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label small fw-bold">步驟名稱</label>
+                            <input type="text" name="step_name" class="form-control" placeholder="例如：部門主管初審" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">是否為必要</label>
+                            <div class="form-check bg-white p-2 rounded border">
+                                <input type="checkbox" class="form-check-input ms-1" name="can_skip" id="canSkipCheck">
+                                <label class="form-check-label small ms-2" for="canSkipCheck">允許跳過</label>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label small fw-bold">簽核人類型</label>
+                            <select name="approver_type" class="form-select" id="approverType"
+                                onchange="toggleApproverInputs()">
+                                <option value="department_manager">部門主管 (系統自動對應)</option>
+                                <option value="specific_user_dept">部門主管 (指定人員)</option>
+                                <option value="role">角色群組 (所有人皆可簽)</option>
+                                <option value="specific_user">指定特定人員 (任意)</option>
+                                <option value="self_select">申請者自選 (可指定角色範圍)</option>
+                            </select>
+                            <div class="form-text small mt-1" id="typeHelp">系統將自動根據提交者的部門尋找主管。</div>
+                        </div>
+
+                        <!-- 隱藏欄位：角色選擇 -->
+                        <div class="col-12 logic-group" id="roleInput" style="display:none;">
+                            <label class="form-label small fw-bold">選擇角色</label>
+                            <select name="role_id" class="form-select">
+                                <option value="">-- 請選擇角色 --</option>
+                                {% for r in roles %}
+                                <option value="{{ r.id }}">{{ r.display_name }} ({{ r.name }})</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text small" id="roleHelp">選擇總經理角色，系統將自動派送給現任總經理。</div>
+                        </div>
+
+                        <!-- 隱藏欄位：部門主管 (指定) -->
+                        <div class="col-12 logic-group" id="deptManagerInput" style="display:none;">
+                            <label class="form-label small fw-bold">選擇部門主管</label>
+                            <select name="specific_user_id_dept" class="form-select">
+                                <option value="">-- 請選擇部門主管 --</option>
+                                {% for u in dept_managers %}
+                                <option value="{{ u.id }}">{{ u.display_name }} ({{ u.username }}) - {{ u.title or '主管'
+                                    }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text small">僅列出擁有「部門主管」角色的帳號。</div>
+                        </div>
+
+                        <!-- 隱藏欄位：指定特定人員 (任意) -->
+                        <div class="col-12 logic-group" id="userInput" style="display:none;">
+                            <label class="form-label small fw-bold">選擇人員</label>
+                            <select name="default_approver_id" class="form-select">
+                                <option value="">-- 請選擇人員 --</option>
+                                {% for u in users %}
+                                <option value="{{ u.id }}">{{ u.display_name or u.username }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-6">
+                            <label class="form-label small text-muted">催簽提醒 (天)</label>
+                            <input type="number" name="reminder_days" class="form-control" placeholder="3" value="3">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small text-muted">跳簽/逾期 (天)</label>
+                            <input type="number" name="escalation_days" class="form-control" placeholder="7" value="7">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-dark w-100 mt-4"><i class="fas fa-plus me-2"></i>新增此步驟</button>
+                    <!-- Actual field name for specific_user needs to be unified or handled in backend -->
+                    <!-- We will handle specific_user_id_dept mapping to default_approver_id in backend or JS (let's do JS for simplicity) -->
+                    <input type="hidden" name="final_specific_user_id" id="finalSpecificUserId">
+                </form>
+            </div>
+
+            <script>
+                function toggleApproverInputs() {
+                    var type = document.getElementById('approverType').value;
+                    var helpText = document.getElementById('typeHelp');
+
+                    // Hide all first
+                    document.querySelectorAll('.logic-group').forEach(el => el.style.display = 'none');
+
+                    if (type == 'department_manager') {
+                        helpText.innerText = '系統將自動根據提交者的部門，尋找該部門的主管進行簽核。';
+                    } else if (type == 'specific_user_dept') {
+                        document.getElementById('deptManagerInput').style.display = 'block';
+                        helpText.innerText = '請從下方清單直接指定一位部門主管。';
+                    } else if (type == 'role') {
+                        document.getElementById('roleInput').style.display = 'block';
+                        document.querySelector('#roleInput label').innerText = '指定角色';
+                        document.getElementById('roleHelp').style.display = 'block';
+                        helpText.innerText = '擁有此角色的所有人員皆可進行簽核。';
+                    } else if (type == 'specific_user') {
+                        document.getElementById('userInput').style.display = 'block';
+                        helpText.innerText = '指定特定單一人員進行簽核。';
+                    } else if (type == 'self_select') {
+                        document.getElementById('roleInput').style.display = 'block';
+                        document.querySelector('#roleInput label').innerText = '限制選擇範圍 (可選)';
+                        document.getElementById('roleHelp').style.display = 'none';
+                        helpText.innerText = '申請者送出時需自行選擇簽核人，可透過下方限制只能選特定角色。';
+                    }
+                }
+
+                // Form submit handler to consolidate user IDs
+                document.querySelector('form[action*="step_add"]').addEventListener('submit', function (e) {
+                    var type = document.getElementById('approverType').value;
+                    var finalInput = document.getElementById('finalSpecificUserId');
+
+                    if (type === 'specific_user_dept') {
+                        // Map specific_user_dept to standard specific_user logic backend
+                        // But wait, the backend expects 'default_approver_id'
+                        var selectedId = document.querySelector('select[name="specific_user_id_dept"]').value;
+                        if (!selectedId) {
+                            e.preventDefault();
+                            alert('請選擇一位部門主管');
+                            return;
+                        }
+                        // Create a hidden input to mimic default_approver_id if needed, 
+                        // OR just set the unified name. 
+                        // Let's rename the dept select to avoid backend reading it directly and double reading?
+                        // No, let's just make sure we send the right data.
+
+                        // Hack: Change the TYPE to 'specific_user' before submit so backend treats it as normal user
+                        // AND move the value to the expected field.
+                        // OR simpler: Handle 'specific_user_dept' in backend route.
+
+                        // Let's Go with Backend Route Modification for cleanest logic.
+                        // Keeping frontend simple.
+                    }
+                });
+            </script>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

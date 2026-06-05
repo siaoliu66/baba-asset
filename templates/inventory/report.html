@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+
+{% block title %}盤點報告 - 任務 #{{ task.id }}{% endblock %}
+{% block header %}盤點結案報告{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Header Info Card -->
+    <div class="col-12">
+        <div class="card glass-card border-0 shadow-sm p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="fw-bold mb-1">任務 #{{ task.id }} 盤點摘要</h5>
+                    <small class="text-muted">
+                        <i class="far fa-calendar-alt me-1"></i>執行日期: 
+                        {{ completion_date.strftime('%Y-%m-%d %H:%M') if completion_date else '進行中' }}
+                    </small>
+                </div>
+                <span class="badge bg-{{ 'success' if task.abnormal_count == 0 else 'danger' }} px-3 py-2 rounded-pill">
+                    {{ '結果正常' if task.abnormal_count == 0 else '發現異常' }}
+                </span>
+            </div>
+
+            <div class="row text-center mt-4">
+                <div class="col-md-3">
+                    <h2 class="fw-bold mb-0">{{ task.total_assets }}</h2>
+                    <p class="text-muted small">應盤總數</p>
+                </div>
+                <div class="col-md-3">
+                    <h2 class="fw-bold text-success mb-0">{{ task.scanned_count }}</h2>
+                    <p class="text-muted small">已盤點數</p>
+                </div>
+                <div class="col-md-3">
+                    <h2 class="fw-bold text-danger mb-0">{{ task.abnormal_count }}</h2>
+                    <p class="text-muted small">異常數量</p>
+                </div>
+                <div class="col-md-3">
+                    <h2 class="fw-bold text-primary mb-0">{{ ((task.scanned_count / task.total_assets) * 100) | round(1)
+                        if task.total_assets > 0 else 0 }}%</h2>
+                    <p class="text-muted small">完成率</p>
+                </div>
+            </div>
+            
+            <div class="border-top mt-4 pt-3">
+                <div class="row">
+                    <div class="col-md-6">
+                        <small class="text-muted d-block">盤點人員</small>
+                        <span class="fw-bold">{{ task.assignee.display_name or task.assignee.username }}</span>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                         <small class="text-muted d-block">盤點地點</small>
+                        <span class="fw-bold">{{ task.location.name if task.location else '個人保管資產' }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Details Table -->
+    <div class="col-12">
+        <div class="card glass-card border-0 shadow-sm p-4">
+            <h5 class="fw-bold mb-4">資產盤點明細</h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>資產編號</th>
+                            <th>資產名稱</th>
+                            <th>保管人</th>
+                            <th>盤點結果</th>
+                            <th>GPS定位</th>
+                            <th>現場照片</th>
+                            <th>備註</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in report_items %}
+                        <tr>
+                            <td><span class="fw-bold text-dark">#{{ item.asset_id }}</span></td>
+                            <td>{{ item.name }}</td>
+                            <td>{{ item.custodian }}</td>
+                            <td>
+                                <span
+                                    class="badge bg-{{ item.result_class }} bg-opacity-10 text-{{ item.result_class }} px-3">
+                                    {{ item.result }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if item.gps_link %}
+                                <a href="{{ item.gps_link }}" target="_blank"
+                                    class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                    <i class="fas fa-map-marker-alt me-1"></i> 查看地圖
+                                </a>
+                                {% else %}
+                                <span class="text-muted small">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.photo_url %}
+                                <a href="{{ item.photo_url }}" target="_blank" class="text-decoration-none">
+                                    <img src="{{ item.photo_url }}" alt="現場照片" class="rounded shadow-sm"
+                                        style="width: 50px; height: 50px; object-fit: cover;">
+                                </a>
+                                {% else %}
+                                <span class="text-muted small">無照片</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ item.remarks or '-' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Extra Scanned Items Section -->
+    {% if extra_items %}
+    <div class="col-12">
+        <div class="card glass-card border-0 shadow-sm p-4 border-warning border-start border-4">
+            <h5 class="fw-bold mb-4 text-warning"><i class="fas fa-exclamation-triangle me-2"></i>額外盤點項目 (不在計畫清單中)</h5>
+            <div class="alert alert-warning border-0 bg-warning bg-opacity-10 text-warning-emphasis">
+                <small><i class="fas fa-info-circle me-1"></i> 以下項目為執行人員掃描到的資產，但這些資產並不在此次盤點任務的原始清單中。這些項目會被標記為盤盈。</small>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>資產編號</th>
+                            <th>資產名稱</th>
+                            <th>保管人</th>
+                            <th>盤點結果</th>
+                            <th>GPS定位</th>
+                            <th>現場照片</th>
+                            <th>備註</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in extra_items %}
+                        <tr>
+                            <td><span class="fw-bold text-dark">#{{ item.asset_id }}</span></td>
+                            <td>{{ item.name }}</td>
+                            <td>{{ item.custodian }}</td>
+                            <td>
+                                <span class="badge bg-warning bg-opacity-10 text-warning-emphasis px-3">
+                                    {{ item.result }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if item.gps_link %}
+                                <a href="{{ item.gps_link }}" target="_blank"
+                                    class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                    <i class="fas fa-map-marker-alt me-1"></i> 查看地圖
+                                </a>
+                                {% else %}
+                                <span class="text-muted small">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.photo_url %}
+                                <a href="{{ item.photo_url }}" target="_blank" class="text-decoration-none">
+                                    <img src="{{ item.photo_url }}" alt="現場照片" class="rounded shadow-sm"
+                                        style="width: 50px; height: 50px; object-fit: cover;">
+                                </a>
+                                {% else %}
+                                <span class="text-muted small">無照片</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ item.remarks or '-' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Approval History Section -->
+    <div class="col-12">
+        <div class="card glass-card border-0 shadow-sm p-4">
+            <h5 class="fw-bold mb-4"><i class="fas fa-file-signature me-2"></i>簽核歷程</h5>
+            
+            {% if approval_history %}
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 15%">簽核階段</th>
+                            <th style="width: 15%">簽核人員</th>
+                            <th style="width: 15%">簽核結果</th>
+                            <th style="width: 20%">簽核時間</th>
+                            <th>簽核意見</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in approval_history %}
+                        <tr>
+                            <td class="fw-bold">第 {{ record.step_order }} 階段</td>
+                            <td>
+                                {% if record.actual_approver %}
+                                    {{ record.actual_approver.display_name or record.actual_approver.username }}
+                                {% else %}
+                                    {{ record.approver.display_name or record.approver.username }} (待簽)
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if record.status == 'approved' %}
+                                    <span class="badge bg-success">已核准</span>
+                                {% elif record.status == 'rejected' %}
+                                    <span class="badge bg-danger">已駁回</span>
+                                {% elif record.status == 'pending' %}
+                                    <span class="badge bg-warning text-dark">審核中</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ record.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ record.approved_at.strftime('%Y-%m-%d %H:%M') if record.approved_at else '-' }}</td>
+                            <td class="text-muted">{{ record.comment or '無意見' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-secondary bg-opacity-10 border-0 text-center py-4">
+                <i class="fas fa-info-circle me-2"></i> 尚未開始簽核流程或無簽核紀錄
+            </div>
+            {% endif %}
+            
+            <div class="mt-4 text-center">
+                <button type="button" class="btn btn-light border px-4" onclick="window.history.back()">關閉報告</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

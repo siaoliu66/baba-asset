@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}公司管理{% endblock %}
+{% block header %}公司管理{% endblock %}
+
+{% block content %}
+<div class="card glass-card border-0 shadow-sm p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h5 class="fw-bold mb-0"><i class="fas fa-building me-2 text-primary"></i>公司列表</h5>
+        <a href="{{ url_for('settings.company_create') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>新增公司
+        </a>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>公司名稱</th>
+                    <th>顯示名稱</th>
+                    <th>統一編號</th>
+                    <th>電話</th>
+                    <th class="text-center">狀態</th>
+                    <th class="text-end">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for company in companies %}
+                <tr>
+                    <td class="fw-bold">{{ company.name }}</td>
+                    <td>{{ company.display_name or '-' }}</td>
+                    <td>{{ company.tax_id or '-' }}</td>
+                    <td>{{ company.phone or '-' }}</td>
+                    <td class="text-center">
+                        {% if company.is_active %}
+                        <span class="badge bg-success">啟用</span>
+                        {% else %}
+                        <span class="badge bg-secondary">停用</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <a href="{{ url_for('settings.company_edit', id=company.id) }}"
+                            class="btn btn-sm btn-outline-primary me-1">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <form action="{{ url_for('settings.company_delete', id=company.id) }}" method="POST"
+                            class="d-inline" onsubmit="return confirm('確定要刪除此公司嗎？')">
+                            <button type="submit" class="btn btn-sm btn-outline-danger"><i
+                                    class="fas fa-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-4">尚無公司資料</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}上傳文件{% endblock %}
+{% block header %}上傳新文件{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card glass-card border-0 shadow-sm p-4">
+            <form action="{{ url_for('documents.upload') }}" method="POST" enctype="multipart/form-data">
+                <div class="row g-4">
+                    <!-- Basic Info -->
+                    <div class="col-12">
+                        <label class="form-label fw-bold">文件標題 <span class="text-danger">*</span></label>
+                        <input type="text" name="title" class="form-control" placeholder="請輸入文件標題" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">文件分類 <span class="text-danger">*</span></label>
+                        <select name="category_id" class="form-select" required>
+                            <option value="">-- 請選擇分類 --</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}">{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">機密等級</label>
+                        <select name="classification" class="form-select">
+                            <option value="public">公開</option>
+                            <option value="internal" selected>內部使用</option>
+                            <option value="confidential">機密</option>
+                            <option value="top_secret">極機密</option>
+                        </select>
+                    </div>
+
+                    <!-- File Upload -->
+                    <div class="col-12">
+                        <label class="form-label fw-bold">選擇檔案 <span class="text-danger">*</span></label>
+                        <input type="file" name="file" class="form-control" required>
+                        <small class="text-muted">支援格式: PDF, DOCX, XLSX, JPG, PNG (最大 10MB)</small>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label fw-bold">文件描述</label>
+                        <textarea name="description" class="form-control" rows="4" placeholder="請輸入文件摘要..."></textarea>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-check mt-2">
+                            <input type="checkbox" name="is_contract" class="form-check-input" id="isContract">
+                            <label class="form-check-label" for="isContract">這是合約文件</label>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="col-12 mt-4">
+                        <hr class="opacity-10 mb-4">
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('documents.index') }}" class="btn btn-light border px-4">
+                                <i class="fas fa-arrow-left me-2"></i>返回列表
+                            </a>
+                            <button type="submit" class="btn btn-primary px-5">
+                                <i class="fas fa-cloud-upload-alt me-2"></i>確認上傳
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

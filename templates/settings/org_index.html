@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}組織架構{% endblock %}
+{% block header %}組織與部門管理{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Company List -->
+    <div class="col-lg-4">
+        <div class="card glass-card border-0 shadow-sm p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0">公司主體</h5>
+                <a href="{{ url_for('settings.company_create') }}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-plus"></i> 新增
+                </a>
+            </div>
+            <div class="list-group list-group-flush">
+                {% for comp in companies %}
+                <div class="list-group-item bg-transparent border-0 px-0 mb-2">
+                    <div class="d-flex align-items-center p-3 glass rounded-3 border">
+                        <div class="bg-primary bg-opacity-10 text-primary p-2 rounded-circle me-3">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-bold">{{ comp.display_name or comp.name }}</div>
+                            <small class="text-muted">{{ comp.code }}</small>
+                        </div>
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ url_for('settings.company_edit', id=comp.id) }}"
+                                class="btn btn-outline-primary btn-sm" title="編輯">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form action="{{ url_for('settings.company_delete', id=comp.id) }}" method="post"
+                                class="d-inline" onsubmit="return confirm('確定刪除此公司?');">
+                                <button type="submit" class="btn btn-outline-danger btn-sm" title="刪除">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-3">尚無公司資料</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Department Tree -->
+    <div class="col-lg-8">
+        <div class="card glass-card border-0 shadow-sm p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="fw-bold mb-0">部門架構階層</h5>
+                <div class="btn-group">
+                    <a href="{{ url_for('settings.department_list') }}"
+                        class="btn btn-sm btn-outline-primary px-3">部門列表</a>
+                    <a href="{{ url_for('settings.department_create') }}" class="btn btn-sm btn-primary ms-2">
+                        <i class="fas fa-plus me-1"></i>新增部門
+                    </a>
+                </div>
+            </div>
+
+            <div class="dept-tree">
+                {%- macro render_dept(dept) -%}
+                <li class="list-group-item border-0 bg-transparent ps-0 py-1">
+                    <div class="d-flex align-items-center p-2 rounded hover-bg-light">
+                        <i
+                            class="fas {{ 'fa-chevron-down' if dept.children else 'fa-minus' }} text-muted me-2 small opacity-50"></i>
+                        <span class="dept-name">{{ dept.display_name or dept.name }}</span>
+                        <span class="badge bg-light text-dark ms-2 small fw-normal">{{ dept.code }}</span>
+                        <div class="dept-actions ms-auto">
+                            <a href="{{ url_for('settings.department_edit', id=dept.id) }}"
+                                class="btn btn-sm p-1 text-primary" title="編輯">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form action="{{ url_for('settings.department_delete', id=dept.id) }}" method="post"
+                                class="d-inline" onsubmit="return confirm('確定刪除此部門?');">
+                                <button type="submit" class="btn btn-sm p-1 text-danger" title="刪除">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% if dept.children %}
+                    <ul class="list-group list-group-flush ms-4 mt-1 border-start">
+                        {% for child in dept.children %}
+                        {{ render_dept(child) }}
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                </li>
+                {%- endmacro -%}
+
+                <ul class="list-group list-group-flush">
+                    {% for dept in departments %}
+                    {{ render_dept(dept) }}
+                    {% else %}
+                    <p class="text-muted text-center py-3">尚無部門資料</p>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-bg-light:hover {
+        background-color: rgba(0, 0, 0, 0.03);
+    }
+
+    .dept-actions {
+        opacity: 0.3;
+        transition: 0.2s;
+    }
+
+    .hover-bg-light:hover .dept-actions {
+        opacity: 1 !important;
+    }
+
+    .dept-tree ul {
+        padding-left: 20px;
+    }
+</style>
+{% endblock %}

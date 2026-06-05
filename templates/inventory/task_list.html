@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}我的盤點任務{% endblock %}
+{% block header %}待執行盤點任務{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+    {% for task in tasks %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card glass-card border-0 shadow-sm h-100 overflow-hidden">
+            <div class="card-header bg-primary bg-opacity-10 border-0 p-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="badge bg-primary px-3 rounded-pill">#{{ task.id }}</span>
+                    {% if proxy_info is defined and task.id in proxy_info %}
+                    <span class="badge bg-warning text-dark px-2 rounded-pill ms-1">
+                        <i class="fas fa-user-friends me-1"></i>代理：{{ proxy_info[task.id] }}
+                    </span>
+                    {% endif %}
+                    <small class="text-muted">{{ task.plan.name }}</small>
+                </div>
+            </div>
+            <div class="card-body p-4">
+                <h5 class="fw-bold mb-3"><i class="fas fa-map-marker-alt text-danger me-2"></i>{{ task.location.name if
+                    task.location else '個人資產' }}</h5>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted small">預計盤點數</span>
+                    <span class="fw-bold">{{ task.total_assets }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted small">目前進度</span>
+                    <span class="text-primary fw-bold">{{ task.scanned_count }} / {{ task.total_assets }}</span>
+                </div>
+
+                <div class="progress mt-3" style="height: 8px;">
+                    {% set percent = (task.scanned_count / task.total_assets * 100) if task.total_assets > 0 else 0 %}
+                    <div class="progress-bar bg-success" style="width: {{ percent }}%"></div>
+                </div>
+            </div>
+            <div class="card-footer bg-transparent border-0 p-3">
+                {% if task.status in ['pending_review', 'completed'] %}
+                <button class="btn btn-secondary w-100 py-2" disabled>
+                    <i class="fas fa-check-circle me-2"></i>{{ '已結案' if task.status == 'completed' else '簽核中' }}
+                </button>
+                {% elif task.scanned_count >= task.total_assets and task.total_assets > 0 %}
+                <form action="{{ url_for('inventory.submit_task', task_id=task.id) }}" method="POST"
+                    onsubmit="return confirm('確認送出，請通知管理者進行後續審核。');">
+                    <button type="submit" class="btn btn-success w-100 py-2">
+                        <i class="fas fa-paper-plane me-2"></i>送出簽核
+                    </button>
+                </form>
+                {% else %}
+                <a href="{{ url_for('inventory.execute_task', task_id=task.id) }}" class="btn btn-primary w-100 py-2">
+                    <i class="fas fa-barcode me-2"></i>{{ '繼續盤點' if task.scanned_count > 0 else '開始盤點 (掃描)' }}
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12 text-center py-5">
+        <div class="glass-card d-inline-block p-5 border-0 shadow-sm rounded-4">
+            <i class="fas fa-tasks fa-3x mb-3 text-muted opacity-25"></i>
+            <p class="text-muted mb-0">目前沒有分配給您的盤點任務</p>
+            <small class="text-secondary">請確認是否有已啟動的盤點計畫，且您已被分配為執行人員。</small>
+        </div>
+    </div>
+    
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}系統設定{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h4 class="fw-bold"><i class="fas fa-cogs me-2"></i>系統設定</h4>
+        <p class="text-muted">管理組織架構、人員權限與系統參數</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Organization -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-body text-center p-4">
+                <div class="mb-3 text-primary">
+                    <i class="fas fa-sitemap fa-3x"></i>
+                </div>
+                <h5 class="card-title fw-bold">組織架構</h5>
+                <p class="card-text text-muted small">設定公司、部門層級結構</p>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('settings.org_index') }}" class="btn btn-outline-primary">檢視架構圖</a>
+                    <a href="{{ url_for('settings.department_list') }}" class="btn btn-sm btn-light">部門列表管理</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Personnel -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-body text-center p-4">
+                <div class="mb-3 text-success">
+                    <i class="fas fa-users fa-3x"></i>
+                </div>
+                <h5 class="card-title fw-bold">人員管理 (HR)</h5>
+                <p class="card-text text-muted small">維護員工基本資料與職稱</p>
+                <a href="{{ url_for('settings.personnel_list') }}" class="btn btn-outline-success w-100">管理人員清單</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Locations -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-body text-center p-4">
+                <div class="mb-3 text-info">
+                    <i class="fas fa-map-marker-alt fa-3x"></i>
+                </div>
+                <h5 class="card-title fw-bold">地點與倉庫</h5>
+                <p class="card-text text-muted small">設定資產存放地點與倉庫代碼</p>
+                <a href="{{ url_for('settings.location_list') }}" class="btn btn-outline-info w-100">管理地點清單</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Workflow Settings -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-body text-center p-4">
+                <div class="mb-3 text-secondary">
+                    <i class="fas fa-stream fa-3x"></i>
+                </div>
+                <h5 class="card-title fw-bold">簽核流程設定</h5>
+                <p class="card-text text-muted small">設定各類申請的簽核關卡與條件</p>
+                <a href="{{ url_for('workflows.config_list') }}" class="btn btn-outline-secondary w-100">管理簽核流程</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Asset Categories -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-body text-center p-4">
+                <div class="mb-3 text-primary">
+                    <i class="fas fa-tags fa-3x"></i>
+                </div>
+                <h5 class="card-title fw-bold">資產分類設定</h5>
+                <p class="card-text text-muted small">管理資產類別與折舊年限</p>
+                <a href="{{ url_for('settings.category_list') }}" class="btn btn-outline-primary w-100">管理資產分類</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users & Roles (Phase 3.5) -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-body text-center p-4">
+                <div class="mb-3 text-warning">
+                    <i class="fas fa-user-shield fa-3x"></i>
+                </div>
+                <h5 class="card-title fw-bold">帳號與權限</h5>
+                <p class="card-text text-muted small">建立系統登入帳號並指派角色</p>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('settings.user_list') }}" class="btn btn-outline-warning">
+                        <i class="fas fa-users-cog me-1"></i>帳號管理
+                    </a>
+                    <a href="{{ url_for('settings.role_list') }}" class="btn btn-sm btn-light">
+                        <i class="fas fa-user-tag me-1"></i>角色權限
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Params -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm border-0 opacity-50">
+            <div class="card-body text-center p-4">
+                <div class="mb-3 text-secondary">
+                    <i class="fas fa-sliders-h fa-3x"></i>
+                </div>
+                <h5 class="card-title fw-bold">參數設定</h5>
+                <p class="card-text text-muted small">SMTP、備份與系統全域設定</p>
+                <button class="btn btn-outline-secondary w-100" disabled>即將推出</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}合規文件預覽{% endblock %}
+{% block header %}編號: {{ doc.doc_number }}{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-9">
+        <div class="card glass-card border-0 shadow-sm p-4 overflow-hidden position-relative"
+            style="min-height: 800px; background: #525659;">
+            <!-- Secure Preview Area -->
+            <div id="document-viewport" class="w-100 h-100 d-flex flex-column align-items-center">
+                <!-- Mock PDF View -->
+                <div class="pdf-page bg-white shadow mb-4 p-5 position-relative"
+                    style="width: 210mm; min-height: 297mm;">
+                    <h3 class="text-center mb-5">{{ doc.title }}</h3>
+                    <p class="mb-4">{{ doc.description or '此文件受系統稽核保護。' }}</p>
+                    <div class="lorem-content opacity-50">
+                        <p>這是一個合規性文件預覽範例。在正式環境中，此區域將整合 PDF.js 渲染器，並鎖定列印與右鍵功能。</p>
+                        <p>系統已在背景記錄您的存取日誌，包括 IP 位址與存取時間。</p>
+                    </div>
+
+                    <!-- Watermark Layer -->
+                    {% if config['WATERMARK_ENABLED'] %}
+                    <div class="watermark-overlay"
+                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; opacity: 0.1;">
+                        {% for i in range(15) %}
+                        <div class="watermark-text"
+                            style="transform: rotate(-35deg); font-size: 2rem; margin: 100px; white-space: nowrap;">
+                            {{ current_user.username }} | {{ now.strftime('%Y-%m-%d %H:%M') if now else '2026-01-31' }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-3">
+        <div class="card glass-card border-0 shadow-sm p-4">
+            <h6 class="fw-bold mb-4">文件詳情</h6>
+            <div class="detail-item mb-3">
+                <label class="text-muted small">當前版本</label>
+                <div class="fw-bold">v{{ doc.version }}</div>
+            </div>
+            <div class="detail-item mb-3">
+                <label class="text-muted small">保管部門</label>
+                <div class="fw-bold">{{ doc.department.display_name if doc.department else '-' }}</div>
+            </div>
+            <div class="detail-item mb-3">
+                <label class="text-muted small">建立日期</label>
+                <div class="fw-bold">{{ doc.created_at.strftime('%Y-%m-%d') if doc.created_at else '-' }}</div>
+            </div>
+            <div class="detail-item mb-3">
+                <label class="text-muted small">機密級別</label>
+                <div>
+                    <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-3">{{
+                        doc.classification.upper() }}</span>
+                </div>
+            </div>
+
+            <hr class="my-4 opacity-10">
+
+            <button class="btn btn-primary w-100 mb-2"><i class="fas fa-download me-2"></i>受控下載</button>
+            <button class="btn btn-outline-secondary w-100"><i class="fas fa-history me-2"></i>版本歷史</button>
+        </div>
+
+        <div class="card glass-card border-0 shadow-sm p-4 mt-4 bg-light">
+            <h6 class="fw-bold mb-3"><i class="fas fa-shield-alt text-success me-2"></i>安全狀態</h6>
+            <p class="small text-muted mb-0">當前存取已加密，且已自動產生浮水印。任何截圖行為將違反公司資安政策。</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

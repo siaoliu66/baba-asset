@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block title %}編輯資產 - {{ asset.name }}{% endblock %}
+{% block header %}編輯資產{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card glass-card border-0 shadow-sm p-4">
+            <form action="{{ url_for('assets.edit', id=asset.id) }}" method="POST" enctype="multipart/form-data">
+                <div class="row g-4">
+                    <!-- 基本資訊 -->
+                    <div class="col-12">
+                        <h6 class="fw-bold text-primary mb-3"><i class="fas fa-info-circle me-2"></i>基本資訊</h6>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">資產編號</label>
+                        <input type="text" class="form-control bg-light" value="{{ asset.id }}" disabled>
+                        <small class="text-muted">編號無法修改</small>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">資產名稱 <span class="text-danger">*</span></label>
+                        <input type="text" name="name" class="form-control" value="{{ asset.name }}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">資產分類</label>
+                        <select name="category_id" class="form-select">
+                            <option value="">-- 請選擇分類 --</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}" {% if asset.category_id==cat.id %}selected{% endif %}>{{
+                                cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- 規格資訊 -->
+                    <div class="col-12 mt-4">
+                        <h6 class="fw-bold text-primary mb-3"><i class="fas fa-microchip me-2"></i>規格資訊</h6>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">品牌</label>
+                        <input type="text" name="brand" class="form-control" value="{{ asset.brand or '' }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">型號</label>
+                        <input type="text" name="model" class="form-control" value="{{ asset.model or '' }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">序號</label>
+                        <input type="text" name="serial_number" class="form-control"
+                            value="{{ asset.serial_number or '' }}">
+                    </div>
+
+                    <!-- 財務資訊 -->
+                    <!-- <div class="col-12 mt-4">
+                        <h6 class="fw-bold text-primary mb-3"><i class="fas fa-coins me-2"></i>財務資訊</h6>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">取得日期</label>
+                        <input type="date" name="purchase_date" class="form-control"
+                            value="{{ asset.purchase_date.strftime('%Y-%m-%d') if asset.purchase_date else '' }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">取得成本 (NT$)</label>
+                        <input type="number" name="purchase_price" class="form-control" min="0"
+                            value="{{ asset.purchase_price or 0 }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">耐用年限 (年)</label>
+                        <input type="number" name="useful_life_years" class="form-control" min="0"
+                            value="{{ asset.useful_life_years or 0 }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">預估殘值 (NT$)</label>
+                        <input type="number" name="salvage_value" class="form-control" min="0"
+                            value="{{ asset.salvage_value or 0 }}">
+                    </div> -->
+
+                    <!-- 歸屬資訊 -->
+                    <div class="col-12 mt-4">
+                        <h6 class="fw-bold text-primary mb-3"><i class="fas fa-building me-2"></i>歸屬資訊</h6>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">所屬公司</label>
+                        <select name="company_id" class="form-select">
+                            <option value="">-- 請選擇 --</option>
+                            {% for comp in companies %}
+                            <option value="{{ comp.id }}" {% if asset.company_id==comp.id %}selected{% endif %}>{{
+                                comp.display_name or comp.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">歸屬部門</label>
+                        <select name="department_id" class="form-select">
+                            <option value="">-- 請選擇 --</option>
+                            {% for dept in departments %}
+                            <option value="{{ dept.id }}" {% if asset.department_id==dept.id %}selected{% endif %}>{{
+                                dept.display_name or dept.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">保管人</label>
+                        <select name="custodian_id" class="form-select">
+                            <option value="">-- 請選擇 --</option>
+                            {% for p in personnel %}
+                            <option value="{{ p.id }}" {% if asset.custodian_id==p.id %}selected{% endif %}>{{ p.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">存放地點</label>
+                        <select name="location_id" class="form-select">
+                            <option value="">-- 請選擇 --</option>
+                            {% for loc in locations %}
+                            <option value="{{ loc.id }}" {% if asset.location_id==loc.id %}selected{% endif %}>{{
+                                loc.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">狀態</label>
+                        <select name="status" class="form-select">
+                            <option value="active" {% if asset.status=='active' %}selected{% endif %}>使用中</option>
+                            <option value="in_stock" {% if asset.status=='in_stock' %}selected{% endif %}>庫存中</option>
+                            <option value="maintenance" {% if asset.status=='maintenance' %}selected{% endif %}>維修中
+                            </option>
+                            <option value="disposed" {% if asset.status=='disposed' %}selected{% endif %}>已報廢</option>
+                            <option value="lost" {% if asset.status=='lost' %}selected{% endif %}>遺失</option>
+                        </select>
+                    </div>
+
+                    <!-- 照片上傳 -->
+                    <div class="col-12 mt-4">
+                        <h6 class="fw-bold text-primary mb-3"><i class="fas fa-camera me-2"></i>資產照片</h6>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">目前照片</label>
+                        {% if asset.photo_path %}
+                        <div class="border rounded p-2 text-center bg-light">
+                            <img src="{{ url_for('static', filename=asset.photo_path) }}" alt="資產照片"
+                                style="max-height: 150px; max-width: 100%;">
+                        </div>
+                        {% else %}
+                        <div class="border rounded p-3 text-center text-muted bg-light">
+                            <i class="fas fa-image fa-2x mb-2"></i><br>尚無照片
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">更換照片</label>
+                        <input type="file" name="photo" class="form-control" accept=".jpg,.jpeg,.png,.webp,.gif"
+                            id="photoInput">
+                        <small class="text-muted">支援格式：JPG, PNG, WebP, GIF</small>
+                        <div id="photoPreview" class="border rounded p-2 text-center mt-2 d-none">
+                            <img id="previewImg" src="" alt="預覽" style="max-height: 150px; max-width: 100%;">
+                        </div>
+                    </div>
+
+                    <!-- QR Code -->
+                    <div class="col-12 mt-4">
+                        <h6 class="fw-bold text-primary mb-3"><i class="fas fa-qrcode me-2"></i>QR Code</h6>
+                    </div>
+                    <div class="col-md-6">
+                        {% if asset.qr_code_path %}
+                        <div class="border rounded p-2 text-center bg-light">
+                            <img src="{{ url_for('static', filename=asset.qr_code_path) }}" alt="QR Code"
+                                style="max-height: 120px;">
+                            <div class="mt-2">
+                                <a href="{{ url_for('static', filename=asset.qr_code_path) }}"
+                                    class="btn btn-sm btn-outline-primary" download>
+                                    <i class="fas fa-download me-1"></i>下載 QR Code
+                                </a>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="border rounded p-3 text-center text-muted bg-light">
+                            <i class="fas fa-qrcode fa-2x mb-2"></i><br>儲存後將自動生成
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- 備註 -->
+                    <div class="col-md-12 mt-4">
+                        <label class="form-label fw-bold">備註說明</label>
+                        <textarea name="notes" class="form-control" rows="3">{{ asset.notes or '' }}</textarea>
+                    </div>
+
+                    <div class="col-12 mt-5">
+                        <hr class="opacity-10 mb-4">
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('assets.detail', id=asset.id) }}" class="btn btn-light px-4 border">
+                                <i class="fas fa-arrow-left me-2"></i>返回詳情
+                            </a>
+                            <button type="submit" class="btn btn-primary px-5">
+                                <i class="fas fa-save me-2"></i>儲存變更
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('photoInput').addEventListener('change', function (e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById('previewImg').src = e.target.result;
+                document.getElementById('photoPreview').classList.remove('d-none');
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+</script>
+{% endblock %}

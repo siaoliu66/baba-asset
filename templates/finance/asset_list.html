@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}固定資產清冊{% endblock %}
+{% block header %}固定資產清冊{% endblock %}
+
+{% block content %}
+<div class="card glass-card border-0 shadow-sm">
+    <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center py-3">
+        <h5 class="fw-bold mb-0 text-primary">資產財務明細</h5>
+        <div>
+            <!-- Export Button -->
+            <a href="{{ url_for('finance.export_ledger') }}" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-file-export me-1"></i>匯出 CSV
+            </a>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4">資產編號</th>
+                        <th>名稱</th>
+                        <th>取得日期</th>
+                        <th>取得成本</th>
+                        <th>殘值</th>
+                        <th>耐用年限</th>
+                        <th>目前淨值 (Net Value)</th>
+                        <th>狀態</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for asset in assets %}
+                    <tr>
+                        <td class="ps-4 text-muted small">{{ asset.id }}</td>
+                        <td class="fw-bold">
+                            <a href="{{ url_for('assets.detail', id=asset.id) }}"
+                                class="text-decoration-none text-dark">
+                                {{ asset.name }}
+                            </a>
+                        </td>
+                        <td class="small">{{ asset.purchase_date.strftime('%Y-%m-%d') if asset.purchase_date else '-' }}
+                        </td>
+                        <td>${{ "{:,.0f}".format(asset.purchase_price or 0) }}</td>
+                        <td class="text-muted small">${{ "{:,.0f}".format(asset.salvage_value or 0) }}</td>
+                        <td class="text-muted small">{{ asset.useful_life_years or '-' }} 年</td>
+                        <td class="fw-bold text-success">${{ "{:,.0f}".format(asset.current_value or
+                            (asset.purchase_price or 0)) }}</td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if asset.status == 'active' else 'secondary' }}">
+                                {{ asset.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-muted">
+                            <p>尚無資產資料</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
