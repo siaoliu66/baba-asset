@@ -12,7 +12,7 @@ venv/
 
 # DB / local data
 *.db
-data/
+# data/
 
 # OS
 .DS_Store
